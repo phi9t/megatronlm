@@ -2,9 +2,10 @@
 
 ## Overview
 
-This example provides a small, mock-data Llama anchor run for checking the local
-Megatron-LM training environment in Docker. It follows the same repo-local
-runtime pattern as the anchor training launcher:
+This example provides YAML-configured Llama runs for checking and exercising the
+local Megatron-LM training environment in Docker. Each run is validated with
+Pydantic before Docker is launched, then follows the same repo-local runtime
+pattern as the anchor training launcher:
 
 - source is mounted read-only and copied into a writable run directory
 - outputs, caches, and TensorBoard logs are written under `local/`
@@ -13,7 +14,7 @@ runtime pattern as the anchor training launcher:
 
 ## Quick Start
 
-Run the small Llama anchor training job:
+Run the small Llama anchor training job from its YAML preset:
 
 ```bash
 mise run llama-anchor
@@ -40,26 +41,42 @@ mise run llama-anchor-preflight -- --dry-run
 The default outputs are written to `local/llama-anchor`, with smoke and preflight
 artifacts under `local/llama-anchor-smoke` and `local/llama-anchor-preflight`.
 
-## Launcher Options
+## YAML Configuration
 
-The `mise` tasks call:
-
-```bash
-uv run python examples/llama/run_llama_anchor.py
-```
-
-Common options:
+The `mise` tasks call the YAML launcher:
 
 ```bash
---image megatron-lm:smoke
---name mcore-llama-anchor
---output-dir local/llama-anchor
---duration-mins 130
---train-iters 500000
---preflight
---foreground
---dry-run
+uv run python examples/llama/run_llama.py --config examples/llama/configs/llama_anchor.yaml
 ```
+
+The checked-in presets live under `examples/llama/configs/`:
+
+- `llama_anchor.yaml`
+- `llama_anchor_smoke.yaml`
+- `llama_anchor_preflight.yaml`
+- `llama3_8b_long.yaml`
+- `llama3_8b_preflight.yaml`
+
+The YAML schema is split into `runtime`, `docker`, `distributed`, `model`,
+`training`, `optimizer`, `fp8`, `parallelism`, `data`, `logging`, and
+`preflight` sections. Unknown fields fail validation.
+
+Use `LLAMA_CONFIG` when you want one-off local configs without changing a `mise`
+task:
+
+```bash
+LLAMA_CONFIG=examples/llama/configs/llama_anchor.yaml \
+  uv run python examples/llama/run_llama.py --dry-run
+```
+
+The only supported CLI overrides are operational launch controls:
+
+- `--config`
+- `--foreground`
+- `--dry-run`
+- `--preflight-only`
+
+Training, model, optimizer, data, and logging changes belong in YAML.
 
 The small anchor configuration uses mock data with Llama-style model choices:
 RoPE, RMSNorm, SwiGLU, grouped query attention, MCore GPT models, BF16, and
@@ -94,14 +111,12 @@ TensorBoard logs, caches, and profiler output are kept under that directory.
 
 The long-run launcher can also run with real data:
 
-```bash
-uv run python examples/llama/run_llama3_8b_long.py \
-  --tokenizer-model /path/to/tokenizer \
-  --data-path /path/to/data_prefix
-```
+Set `data.mode: real`, `data.tokenizer_model`, and `data.data_path` in a YAML
+config. Real-data configs use `HuggingFaceTokenizer`; mock-data configs use
+`NullTokenizer`.
 
-Use `--resume` to add `--load /outputs/checkpoints` when continuing from a
-checkpoint in the output directory.
+Set `runtime.resume: true` in YAML to add `--load /outputs/checkpoints` when
+continuing from a checkpoint in the output directory.
 
 ## 8B FP8 Configuration
 
