@@ -71,16 +71,18 @@ Primary sections to consult:
 Local distilled notes:
 
 - `references/ultrascale-playbook.md`
+- `docs/ultra-scale-playbook/megatron-mapping.md`
 
-Vendored raw source:
+Docs-owned raw source and local app:
 
-- Directory: `references/source-materials/ultrascale-playbook/`
+- Directory: `docs/ultra-scale-playbook/app/`
 - Included: upstream `README.md`, `.gitattributes`, `.gitignore`,
   `ultra_blog.md`, conversion scripts, source-side `src/`, `python/`,
   `assets/data/`, `assets/images/`, and the original PDF
   `The_Ultra-Scale_Playbook_Training_LLMs_on_GPU_Clusters.pdf`.
 - Not included: generated `dist/` duplicates and large audio files under
   `assets/audio/`.
+- Build and launch instructions: `docs/ultra-scale-playbook/index.md`
 
 ## Copyright Boundary
 

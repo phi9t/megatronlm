@@ -99,6 +99,35 @@
 
         <aside>We are extremely thankful to the whole <a href="https://distill.pub/">distill.pub</a> team for creating
             the template on which we based this blog post.</aside>
+
+        <h2>Megatron-LM companion</h2>
+
+        <p>
+            This vendored edition is maintained inside Megatron-LM as a practical companion to the repository. The concepts below map directly to Megatron launch flags, local Llama examples, and implementation paths so you can read the systems story and then inspect the code that implements it.
+        </p>
+
+        <div class="megatron-companion">
+            <div class="megatron-companion-row">
+                <strong>Start from runnable examples.</strong>
+                <span><code>examples/llama/README.md</code>, <code>examples/llama/configs/llama3_8b_long.yaml</code>, and <code>mise run llama3-8b-long-dry-run</code> show how Playbook ideas become concrete Megatron launches.</span>
+            </div>
+            <div class="megatron-companion-row">
+                <strong>Map parallelism to flags.</strong>
+                <span>DP is implicit from world size; TP uses <code>--tensor-model-parallel-size</code>; SP uses <code>--sequence-parallel</code>; CP uses <code>--context-parallel-size</code>; PP uses <code>--pipeline-model-parallel-size</code>; EP uses <code>--expert-model-parallel-size</code>.</span>
+            </div>
+            <div class="megatron-companion-row">
+                <strong>Trace ZeRO-style behavior.</strong>
+                <span><code>--use-distributed-optimizer</code> changes gradient synchronization toward reduce-scatter and sharded optimizer state; inspect <code>megatron/core/distributed/param_and_grad_buffer.py</code> and <code>megatron/core/optimizer/distrib_optimizer.py</code>.</span>
+            </div>
+            <div class="megatron-companion-row">
+                <strong>Connect memory math to code.</strong>
+                <span><code>megatron/training/theoretical_memory_usage.py</code> captures the same model-state and activation-memory categories used throughout this Playbook.</span>
+            </div>
+            <div class="megatron-companion-row">
+                <strong>Use the full mapping page.</strong>
+                <span>The repo page <code>docs/ultra-scale-playbook/megatron-mapping.md</code> indexes the key flags, docs, examples, and source paths for each concept.</span>
+            </div>
+        </div>
         
         <p>The book is built on the following <strong>three general foundations</strong>:</p>
 
@@ -242,7 +271,7 @@
         <p>While this widget gives a theoretical breakdown, we also made the <a href="https://huggingface.co/spaces/nanotron/predict_memory">following tool</a> that can be used to predict the memory usage during a training run:</p>
 
         <a href="https://huggingface.co/spaces/nanotron/predict_memory">
-            <img src="/assets/images/predict_memory_tool.png" alt="Predict Memory Tool" />
+            <img src="assets/images/predict_memory_tool.png" alt="Predict Memory Tool" />
         </a>
 
 
@@ -319,7 +348,7 @@
 <!-- RH: Should these audio-container divs be commented out for the book version, or OK to leave them in? -->
         <div class="audio-container">
         <audio controls>
-            <source src="../assets/audio/Single GPU Model Training_ Memory, Batch Size, and Optimization.wav" type="audio/wav">
+            <source src="assets/audio/Single GPU Model Training_ Memory, Batch Size, and Optimization.wav" type="audio/wav">
             Your browser does not support the audio element.
           </audio>
           <div class="figure-legend">
@@ -341,7 +370,7 @@
 
         <div class="svg-container" id="svg-first_steps_simple_training"> </div>
         <div class="info" id="svg-first_steps_simple_training-info">Hover over the network elements to see their details.</div>
-        <script src="../assets/images/first_steps_simple_training.js"></script>
+        <script src="assets/images/first_steps_simple_training.js"></script>
 
         <p>In this figure, the boxes on the top line can be seen as successive layers inside a model (and the same for the last line). The pink boxes are the associated gradients for each of these layers, computed during the backward pass.</p>
 
@@ -407,7 +436,7 @@
 <!-- RH: In this figure, should the bottom 4 items in the legend be plural (Gradients, Activations, etc.) to match the figures below? -->
         <!-- <div class="svg-container l-body-outset" id="svg-first_steps_memory_profile"> </div>
         <div class="info" id="svg-first_steps_memory_profile-info">Hover over the elements to see their details.</div>
-        <script src="../assets/images/first_steps_memory_profile.js"></script>
+        <script src="assets/images/first_steps_memory_profile.js"></script>
  -->
         <!-- {{!-- <iframe id="plotFrame" src="assets/data/benchmarks/memory-profile.html" height="520" width="1000" scrolling="no" frameborder="0"></iframe> --}} -->
         <div id="fragment-memory-profile"></div>
@@ -554,7 +583,7 @@
 
         <div class="svg-container" id="svg-activation_recomputation"> </div>
         <div class="info" id="svg-activation_recomputation-info">Hover over the network elements to see their details.</div>
-        <script src="../assets/images/activation_recomputation.js"></script>
+        <script src="assets/images/activation_recomputation.js"></script>
         <p>There are a few strategies for selecting key activations to store:</p>
 
         <ul>
@@ -612,7 +641,7 @@
 
         <p>Gradient accumulation allows us to effectively increase our batch size up to infinity (and beyond!) while the memory footprint stays constant. Gradient accumulation is also compatible with activation recomputation for further memory reductions.</p>
 
-        <p><img alt="image.png" src="/assets/images/gradaccumulation_diag.png" /></p>
+        <p><img alt="image.png" src="assets/images/gradaccumulation_diag.png" /></p>
 
         <aside>Using gradient accumulation means we need to keep buffers where we accumulate gradients that persist throughout a training step, whereas without gradient accumulation, in the backward pass gradients are computed while freeing the activation memory, which means lower peak memory use.</aside>
 
@@ -650,7 +679,7 @@
             <li>Kernel execution times and memory allocation</li>
         </ul>
 
-        <p><img alt="profile_trace_annotated.png" src="/assets/images/profile_trace_annotated.png" /></p>
+        <p><img alt="profile_trace_annotated.png" src="assets/images/profile_trace_annotated.png" /></p>
         <div class="figure-legend"><p>Example trace showing a CPU threads launching kernels asynchronously on the GPU, with compute kernels and communication happening in parallel across different CUDA streams</p></div>
 
         <p>The trace helps identify bottlenecks like:</p>
@@ -669,7 +698,7 @@
 
         <div class="audio-container">
             <audio controls>
-                <source src="../assets/audio/Data Parallelism and ZeRO_ Scaling Model Training.wav" type="audio/wav">
+                <source src="assets/audio/Data Parallelism and ZeRO_ Scaling Model Training.wav" type="audio/wav">
                 Your browser does not support the audio element.
               </audio>
               <div class="figure-legend">
@@ -680,7 +709,7 @@
     
         <p>The idea behind data parallelism (DP) is to replicate the model on several GPUs (we call the replicas “model instances”) and run forward and backward passes on different micro-batches of data in parallel on each GPU - hence the name <em>data parallelism</em>. You've probably already seen data parallelism in simple training examples, but we'll dive quite a bit deeper in this section, so stay tuned even if you know the general approach.</p>
 
-        <p><img alt="image.png" src="/assets/images/dp_diagram.png" /></p>
+        <p><img alt="image.png" src="assets/images/dp_diagram.png" /></p>
 
         <aside>If you're not familiar with distributed communication patterns like broadcast, gather, and all-reduce, we've put together a small crash course in <a target="_self" href="#a0%3A_parallel_programming_crash_course" class="">"A0: Parallel Programming Crash Course"</a>.</aside>
   
@@ -689,7 +718,7 @@
 
         <p>This involves our first “distributed communication” primitive, <em><strong>all-reduce</em></strong>, which handles the synchronization and communication between GPU instances and nodes.</p>
 				<!-- RH: In this figure, on the right, can "AllReduce Grads" be changed to "All-reduce grads"? -->				
-        <p><img alt="image.png" src="/assets/images/dp_overlap1.svg" /></p>
+        <p><img alt="image.png" src="assets/images/dp_overlap1.svg" /></p>
 
         <p>A naive DP implementation would just wait for the backward pass to finish so that we have all the gradients, then trigger an all-reduce over all the DP ranks to sync the gradients. But such sequential steps of computation followed by communication are <strong>A BIG NO-NO</strong> because we don’t want our GPUs to stay idle while communication is happening, like in the above image.</p>
 
@@ -703,7 +732,7 @@
 
         <p>As shown in the figure above, the gradients (pink boxes) for a layer can be gathered and summed even before the gradients from earlier layers (the pink boxes to their left) have been computed. For example, as soon as the backward pass of the last layer is complete (the last box on the right), those gradients can already be gathered and summed while the backward computations continue for earlier layers, moving toward the left.</p>
 				<!-- RH: In this figure, on the right, can "AllReduce Grads" be changed to "All-reduce grads"? -->				
-        <p><img alt="image.png" src="/assets/images/dp_overlap2.svg"/></p>
+        <p><img alt="image.png" src="assets/images/dp_overlap2.svg"/></p>
 
         <p>This can be achieved in PyTorch by attaching an <em>all-reduce hook function</em> to each parameter. An all-reduce operation is then triggered as soon as the gradient for that parameter is ready, while the gradients for other parameters are still being computed. This approach overlaps most of the all-reduce operations with gradient calculations, thereby improving efficiency. Here's a simple function to attach a hook:</p>
 
@@ -738,7 +767,7 @@
         <p>GPU operations are usually more efficient when performed on large tensors, rather than having many operations running on smaller tensors. This is also true for communication operations. Thus, we can advantageously group gradients into “buckets” and launch a single all-reduce for all the gradients within the same bucket instead of performing independent all-reduce operations for each gradient. It will generally look like the following:
         </p>
 				<!-- RH: In this figure, on the right, can "AllReduce Grads" be changed to "All-reduce grads"? -->				
-        <p><img alt="dp_overlap3.svg" src="/assets/images/dp_overlap3.svg" /></p>
+        <p><img alt="dp_overlap3.svg" src="assets/images/dp_overlap3.svg" /></p>
         
         <p>Think of it like packing items into boxes before shipping them. It's more efficient to send a few big boxes than many small ones. By performing a single all-reduce operation for each bucket, we can significantly reduce the communication overhead and speed up the communication operation.</p>
 
@@ -816,7 +845,7 @@
 
         <p>We can see this happening in practice with some benchmarks:</p>
 
-        <!-- <p><img alt="image.png" src="/assets/images/dp_scaling.svg"/></p> -->
+        <!-- <p><img alt="image.png" src="assets/images/dp_scaling.svg"/></p> -->
         <div class="l-body-outset" id="fragment-dp_scaling"></div>
         <!-- <script>
             window.addEventListener('load', function() {
@@ -842,7 +871,7 @@
                 frame.style.width = frame.contentWindow.document.documentElement.scrollWidth + 'px';
             });
         </script> -->
-        <!-- <p><img alt="dp_ourjourney_memoryusage.svg" src="/assets/images/dp_ourjourney_memoryusage.svg" /></p> -->
+        <!-- <p><img alt="dp_ourjourney_memoryusage.svg" src="assets/images/dp_ourjourney_memoryusage.svg" /></p> -->
 
 
         <p>We've also seen that data parallelism starts to have some limiting communication overhead above a certain level of scaling. Do we have other options for these larger models or large batch sizes? We do have some solutions, thankfully - they involve either moving some tensors to the CPU or splitting the weights/gradients/optimizer states tensors across GPU devices.</p>
@@ -889,7 +918,7 @@
 
         <p>The idea of ZeRO is to shard these objects across the DP ranks, with each node only storing a slice of the items. These slices are then reconstructed when and if needed, thereby dividing memory usage by the data parallel degree <d-math>N_d</d-math>:</p>
 
-        <p><img alt="zero_memory.svg" src="/assets/images/zero_memory.svg" /></p>
+        <p><img alt="zero_memory.svg" src="assets/images/zero_memory.svg" /></p>
         <p>Here, <d-math>\Psi</d-math> denotes the number of parameters, <d-math>k</d-math> denotes the memory multiplier of optimizer states (<d-math>k=12</d-math> for Adam, as we've just seen), and <d-math>N_d</d-math> denotes DP degree.</p>
 
         <aside>If you're using FP32 gradient accumulation with ZeRO-2 or ZeRO-3, you would need to add an additional <d-math>\frac{4\Psi}{N_d}</d-math> to the gradient term.</aside>
@@ -916,11 +945,11 @@
 
         <p>You may be wondering what this "reduce-scatter" operation is and what this all looks like, so let's try to make it more graphical with the figure below. We'll go over all the steps of a forward/backward pass cycle:</p>
 
-        <p><img alt="dp_zero1.gif" src="/assets/images/dp_zero1.gif" /></p>
+        <p><img alt="dp_zero1.gif" src="assets/images/dp_zero1.gif" /></p>
 
         <p>In terms of practical communications, compared to vanilla DP, ZeRO-1 changes our all-reduce gradient communication to a reduce-scatter operation and adds an all-gather operation over all parameters after the optimizer step. Here's how it looks:</p>
 <!-- RH: In this figure, on the right, can "AllGather Params" and "ReduceScatter Grad" be changed to "All-gather params" and "Reduce-scatter grads"? -->
-        <p><img alt="dp_zero1_overlap.svg" src="/assets/images/dp_zero1_overlap.svg" /></p>
+        <p><img alt="dp_zero1_overlap.svg" src="assets/images/dp_zero1_overlap.svg" /></p>
 
         <p>If you've been following along, you'll recall from our discussion of vanilla DP that we can overlap the all-reduce gradient communication with the backward pass computation. In ZeRO-1, we can also investigate how to efficiently overlap the newly added all-gather of BF16 parameters. There are two main strategies for this:</p>
 
@@ -944,11 +973,11 @@
 
         <aside>In the case of FP32 gradient accumulation, we only need to keep <d-math>\frac{1}{N_d}</d-math> FP32 grads used to accumulate the BF16 grads coming from the reduce-scatter. And in the optimizer step, these <d-math>\frac{1}{N_d}</d-math> FP32 grads are used to update the local shard of the optimizer states.</aside>
 
-        <p><img alt="dp_zero2.gif" src="/assets/images/dp_zero2.gif" /></p>
+        <p><img alt="dp_zero2.gif" src="assets/images/dp_zero2.gif" /></p>
 
         <p>It's easy to see now that sharding the gradients leads to <d-math>2\Psi + \frac{2\Psi+k\Psi}{N_d}</d-math>, and as <d-math>N_d</d-math> is increased, we can use up to 8x less memory than the baseline. In terms of communication, the same process applies as for ZeRO-1, with the only difference being that we communicate and release memory on the fly: they both require a reduce-scatter for the gradients and an all-gather over all parameters. ZeRO-2 is thus also equivalent to vanilla DP training with regard to communication.</p>
 <!-- RH: In this figure, on the right, can "AllGather Params" and "ReduceScatter Grad" be changed to "All-gather params" and "Reduce-scatter grads"? -->
-        <p><img alt="dp_zero2_overlap.svg" src="/assets/images/dp_zero2_overlap.svg" /></p>
+        <p><img alt="dp_zero2_overlap.svg" src="assets/images/dp_zero2_overlap.svg" /></p>
 
         <aside>Note: You might notice that there is no real overhead to using ZeRO-2 over ZeRO-1 besides implementation complexity, and indeed ZeRO-2 is usually the better option.</aside>
 
@@ -967,15 +996,15 @@
 
         <p>So how do we do a forward or backward pass in practice if the parameters of the model are distributed? Quite simply, we gather them on demand when we need them. In the forward pass, this looks as follows:</p>
 
-        <p><img alt="dp_zero3_fwd.svg" src="/assets/images/dp_zero3_fwd.svg" /></p>
+        <p><img alt="dp_zero3_fwd.svg" src="assets/images/dp_zero3_fwd.svg" /></p>
 
         <p>As we perform the forward pass and sequentially go through the layers, we retrieve the necessary parameters on demand and immediately flush them from memory when we don't need them anymore. The backward pass works the same way, just inverted in flow. Here, we produce the gradient shards: </p>
 
-        <p><img alt="dp_zero3_bwd.svg" src="/assets/images/dp_zero3_bwd.svg" /></p>
+        <p><img alt="dp_zero3_bwd.svg" src="assets/images/dp_zero3_bwd.svg" /></p>
 
         <p>The other issue is that we need to do these all-gathers continuously throughout the forward and backward pass in a training step, which amounts to <d-math>2\cdot \text{num\_layers} -1</d-math> additional all-gathers in a training step compared to ZeRO-2. Each comes with a small <em>base latency</em> overhead, as we can see in the following figure:</p>
 <!-- RH: In this figure, change "AllGather Params" and "ReduceScatter Grads" to "All-gather params" and "Reduce-scatter grads" and lowercase "Free"? -->
-        <p><img alt="dp_zero3_overlap.svg" src="/assets/images/dp_zero3_overlap.svg" /></p>
+        <p><img alt="dp_zero3_overlap.svg" src="assets/images/dp_zero3_overlap.svg" /></p>
 
         <p>During the forward pass we do all-gather operations for the parameters when we need them, so there's a <d-math>\Psi</d-math> communication tax. Since we discard the parameters immediately after we use them in the forward pass, we need one more all-gather during the backward pass as well, incurring another <d-math>\Psi</d-math> communication tax. Finally, we need the same reduce-scatter operation as in ZeRO-2 for the gradients, which also costs <d-math>\Psi</d-math> in communication. So, we arrive at a total communication cost of <d-math>3\Psi</d-math>, compared to <d-math>2\Psi</d-math> for ZeRO-2.</p>
 
@@ -999,7 +1028,7 @@
                 frame.style.width = frame.contentWindow.document.documentElement.scrollWidth + 'px';
             });
         </script> -->
-        <!-- <p><img alt="zero3_memoryusage.svg" src="/assets/images/zero3_memoryusage.svg" /></p> -->
+        <!-- <p><img alt="zero3_memoryusage.svg" src="assets/images/zero3_memoryusage.svg" /></p> -->
 
         <p>To overcome this issue, it's time to examine a new, orthogonal axis of parallelism - <strong><em>tensor parallelism (TP)</em></strong>. Unlike ZeRO-3, which relies on heavy parameter communication, TP proposes to shard parameters, gradients, optimizer states, AND activations across devices without requiring any communication of model parameters between GPUs.</p>
         
@@ -1009,7 +1038,7 @@
 
         <div class="audio-container">
             <audio controls>
-                <source src="../assets/audio/Tensor, Sequence, and Context Parallelism for Distributed Training.wav" type="audio/wav">
+                <source src="assets/audio/Tensor, Sequence, and Context Parallelism for Distributed Training.wav" type="audio/wav">
                 Your browser does not support the audio element.
               </audio>
               <div class="figure-legend">
@@ -1039,13 +1068,13 @@
 
         <p>In practice, a small example of the operation looks like this:</p>
 
-        <p style="text-align: center"><img width="300px" alt="TP diagram" src="/assets/images/tp_diagram.svg" /></p>
+        <p style="text-align: center"><img width="300px" alt="TP diagram" src="assets/images/tp_diagram.svg" /></p>
 
         <p>Let’s see how we can parallelize this operation! In tensor parallelism, tensors are split into <d-math>N</d-math> shards along a particular dimension and distributed across <d-math>N</d-math> GPUs. Matrices can be split on either columns or rows, leading to row or column parallelism. As we’ll see in the following discussion, row and column sharding require different communication primitives.</p>
 
         <p>Our first option is to use <strong><em>column-wise</em></strong> (also called <em>column-linear</em>) sharding: we'll copy the complete input matrices to each worker, requiring an operation called <strong><em>broadcast</em></strong>, and split the weight matrix by columns. The inputs are then multiplied with the partial weight matrices, and finally the results are combined using an all-gather operation.</p>
 
-        <p><img alt="image.png" src="/assets/images/tp_diagram2.png" /></p>
+        <p><img alt="image.png" src="assets/images/tp_diagram2.png" /></p>
 
         <p>Here's the code implementation of column-wise tensor parallelism:</p>
 
@@ -1060,7 +1089,7 @@
 
         <p>The second option is called <strong><em>row-wise</em></strong> (or <em>row-linear</em>) sharding. As the attentive reader might guess, row-linear means that we split the weight matrix into chunks of rows. However, this also requires us to split the inputs, so we need to use a <strong><em>scatter</em></strong> operation (our fourth distributed communication primitive!) rather than the broadcast operation used in column-linear sharding. The results on each worker are already in the right shape but need to be summed for the final result, so this scenario also requires an all-reduce operation:</p>
 
-        <p><img alt="image.png" src="/assets/images/tp_diagram3.png" /></p>
+        <p><img alt="image.png" src="assets/images/tp_diagram3.png" /></p>
 
         <p>Here's the implementation for row-wise tensor parallelism:</p>
 
@@ -1081,20 +1110,20 @@
 
         <p>The feedforward part can be parallelized by having a column-linear followed by a row-linear split, which amounts to a broadcast to copy the input and an all-reduce in the forward pass. Note that the broadcast isn’t needed in actual training, where we can make sure inputs are already synced across TP ranks. This setup is more efficient than starting with a row-linear followed by column-linear split, as we can skip the intermediate all-reduce between the split operations.</p>
 
-        <p><img alt="image.png" src="/assets/images/tp_diagram4.png" /></p>
+        <p><img alt="image.png" src="assets/images/tp_diagram4.png" /></p>
 
         <p>Now that we've found an efficient schema for the feedforward part of the transformer, let's take a look at the multi-head attention block.</p>
 
         <p>We can generally follow a similar approach here, where the Query (Q), Key (K), and Value (V) matrices are split in a column-parallel fashion and the output projection can be considered a row-linear. With multi-head attention, the column-parallel approach has a very natural interpretation: each GPU computes the attention for an individual or a subset of attention heads. The same approach works as well for <a href="https://arxiv.org/abs/1911.02150"><strong><em>multi-query attention (MQA)</em></strong></a> or <a href="https://arxiv.org/abs/2305.13245"><strong><em>grouped query attention (GQA)</em></strong></a>, where keys and values are shared between queries. </p>
 
-        <p><img alt="image.png" src="/assets/images/tp_full_diagram.png" /></p>
+        <p><img alt="image.png" src="assets/images/tp_full_diagram.png" /></p>
 
         <p>We're able to apply tensor parallelism so effectively to both the Attention and MLP blocks because they have dimensions that are naturally independent. The Attention block can be parallelized along the <code>num_attention_heads</code> dimension, as each attention head operates independently. Similarly, the MLP block can be parallelized along the <code>hidden_dim</code> dimension, as operations within the feedforward network are independent along this dimension.</p>
         <p>It's worth noting, however, that the tensor parallelism degree should not exceed the number of attention heads because we shard the QKV projection along the <code>num_attention_heads</code> dimension. When using Grouped Query Attention (GQA), we have <d-math>num\_attention\_heads</d-math> query heads but only <d-math>num\_kv\_heads</d-math> key/value heads (with <d-math>num\_attention\_heads >= num\_kv\_heads</d-math>). In this case, we can still set <d-math>TP = num\_attention\_heads</d-math>, but we'll need to ensure that the K/V heads stay properly synchronized across GPUs. For instance, Llama-3 8B has 32 query heads but only 8 key/value heads, so while the TP degree could theoretically go up to 32, we would need careful implementation to maintain K/V head synchronization across the tensor-parallel workers.</p>
         
         <p>Note also that tensor parallelism is not a silver bullet for training. We’ve added several distributed communication primitives directly in the computation path of our model, which are therefore hard to fully hide/overlap with computation (like we did in ZeRO), so our final performance will be the result of a trade-off between the computation and memory gains and the added communication overhead. Let's illustrate this:</p>
 <!-- RH: In this figure, change "TP region" to "TP Region" and "AllReduce Activs" to "All-reduce activs"? -->
-        <p><img alt="Forward pass in tensor parallelism" src="/assets/images/tp_overlap.svg" /></p>
+        <p><img alt="Forward pass in tensor parallelism" src="assets/images/tp_overlap.svg" /></p>
 
         <aside>It's possible to partially hide this communication by performing block matrix multiplication coupled with async communication/computation.</aside>
 
@@ -1118,7 +1147,7 @@
             });
         </script> -->
 <!-- 
-        <p><img alt="Impact of Tensor Parallelism on model performance and batch size capacity: while increasing TP leads to reduced per-GPU throughput (left), it enables processing of larger batch sizes (right), illustrating the trade-off between computational efficiency and memory availability in distributed training." src="/assets/images/tp_scaling.svg" /></p> -->
+        <p><img alt="Impact of Tensor Parallelism on model performance and batch size capacity: while increasing TP leads to reduced per-GPU throughput (left), it enables processing of larger batch sizes (right), illustrating the trade-off between computational efficiency and memory availability in distributed training." src="assets/images/tp_scaling.svg" /></p> -->
 
         <p>While increasing TP leads to reduced per-GPU throughput (left), it enables processing of larger batch sizes (right), illustrating the trade-off between computational efficiency and memory availability in distributed training.</p>
 
@@ -1135,7 +1164,7 @@
                 frame.style.width = frame.contentWindow.document.documentElement.scrollWidth + 'px';
             }); -->
         <!-- </script> -->
-        <!-- <p><img alt="tp_memoryusage.svg" src="/assets/images/tp_memoryusage.svg" /></p> -->
+        <!-- <p><img alt="tp_memoryusage.svg" src="assets/images/tp_memoryusage.svg" /></p> -->
 
         <p>Increasing tensor parallelism reduces the memory needed for model parameters, gradients, and optimizer states on each GPU to the point where we can start fitting a larger model onto a single node of 8 GPUs. </p>
         
@@ -1175,7 +1204,7 @@
 <!-- RH: In this diagram, can the f and g labels be italicized, a dash added in "Self Attention," and "GeLU" changed to "GELU"? -->
         <p style="text-align: center"><img alt=" in forward: f = no-op ; f* = all-reduce ; g = all-gather ; g* = reduce-scatter
             in backward: f = all-reduce ; f* = no-op ; g = reduce-scatter ; g* = all-gather
-           SP region needs full hidden_dim" src="/assets/images/tp_sp_diagram.png"  style="width: 500px" /></p>
+           SP region needs full hidden_dim" src="assets/images/tp_sp_diagram.png"  style="width: 500px" /></p>
 
         <p>The key challenge is managing these transitions efficiently while keeping memory usage low and maintaining correctness.</p>
 
@@ -1227,7 +1256,7 @@
 
       </div>
       <div>
-        <img alt="image.png" src="/assets/images/tp_sp_diagram_zoomed.png" />
+        <img alt="image.png" src="assets/images/tp_sp_diagram_zoomed.png" />
       </div>
     </div>
 
@@ -1298,7 +1327,7 @@
                 frame.style.width = frame.contentWindow.document.documentElement.scrollWidth + 'px';
             }); -->
         <!-- </script> -->
-        <!-- <p><img alt="tp_sp_memoryusage.svg" src="/assets/images/tp_sp_memoryusage.svg" /></p> -->
+        <!-- <p><img alt="tp_sp_memoryusage.svg" src="assets/images/tp_sp_memoryusage.svg" /></p> -->
 
         <p>We've again strongly reduced the maximum memory usage per GPU, allowing us to fit sequence lengths of 16k tokens with TP+SP=16 - an improvement over the vanilla TP case! (TP=16 is still a bit large, as we saw in the previous section, but we'll see how we can improve this in the next section.)</p>
 
@@ -1306,7 +1335,7 @@
 
         <p>If you’ve been paying close attention, you’ll notice that we’re talking about four communication operations in each layer (two for attention and two for MLP). This is what the MLP profiling looks like when using TP+SP:</p>
 <!-- RH: In this figure, initial-cap "region" at the top (x3) and change "AllGather Activs" and "ReduceScatter Activs" to "All-gather activs" and "Reduce-scatter activs"? -->
-        <p><img alt="tp_sp_overlap.svg" src="/assets/images/tp_sp_overlap.svg" /></p>
+        <p><img alt="tp_sp_overlap.svg" src="assets/images/tp_sp_overlap.svg" /></p>
 
         <p>Just like vanilla TP, TP+SP can’t easily be overlapped with compute, which makes throughput heavily dependent on the communication bandwidth. Here again, like vanilla TP, TP+SP is usually done only within a node (keeping the TP degree under the number of GPUs per node; e.g., TP≤8).</p>
 
@@ -1322,7 +1351,7 @@
             }); -->
         <!-- </script> -->
 
-        <!-- <p><img alt="tp_sp_scaling.svg" src="/assets/images/tp_sp_scaling.svg" /></p> -->
+        <!-- <p><img alt="tp_sp_scaling.svg" src="assets/images/tp_sp_scaling.svg" /></p> -->
         <p>Again, there's a trade-off between computational efficiency (left) and memory capacity (right). While higher degrees of parallelism enable processing of significantly larger batch sizes by reducing the activation memory, they also reduce per-GPU throughput, in particular above a threshold corresponding to the number of GPUs per node.</p>
 
         <p>Let’s summarize our observations:</p>
@@ -1361,13 +1390,13 @@
             });
         </script> -->
 
-        <!-- <p><img alt="image.png" src="/assets/images/cp_memoryusage.svg" /></p> -->
+        <!-- <p><img alt="image.png" src="assets/images/cp_memoryusage.svg" /></p> -->
 
         <p>The core idea of context parallelism is similar to sequence parallelism (i.e., splitting along the sequence length), but this approach is applied to the modules where we already apply tensor parallelism. We will thus split these modules along two dimensions, thereby also reducing the effect of sequence length. You should find this approach quite intuitive after all we’ve already covered, but there's a trick to it, so stay awake!</p>
                 
         <p>With context parallelism, just like sequence parallelism, we split the input along the sequence dimension - but we now apply this splitting along the full model, instead of only the sequence-parallel regions of the model, as we did previously with TP+SP.</p>
         
-        <!-- <p><img alt="cp_8Bmemoryusage.svg" src="/assets/images/cp_8Bmemoryusage.svg" /></p>
+        <!-- <p><img alt="cp_8Bmemoryusage.svg" src="assets/images/cp_8Bmemoryusage.svg" /></p>
  -->
         <p>Splitting the sequence doesn't affect most modules, like MLP and LayerNorm, where each token is processed independently. It also doesn’t require expensive communication like TP, as only the inputs are split, not the weight matrices. Just like with data parallelism, after computing the gradients, an all-reduce operation is initiated to synchronize the gradients across the CP group.</p>
         
@@ -1400,13 +1429,13 @@
 
         <p>The whole process with four GPUs is shown in the following animation:</p>
 
-        <p><img alt="ring-attention.gif" src="/assets/images/ring-attention.gif" /></p>
+        <p><img alt="ring-attention.gif" src="assets/images/ring-attention.gif" /></p>
 
         <p>It's probably obvious to you from this animation why the authors chose to call this approach Ring Attention<d-cite bibtex-key="liu2023ringattentionblockwisetransformers"></d-cite>!</p>
         
         <p>There is one big problem, though, which is that a naive implementation of Ring Attention leads to some strong imbalances between GPUs due to the shape of the causal attention matrix. Let’s take a look at the softmax computation by considering the attention score matrix with the causal attention mask:</p>
         
-        <p><img alt="cp_attnmask.svg" src="/assets/images/cp_attnmask.svg" /></p>
+        <p><img alt="cp_attnmask.svg" src="assets/images/cp_attnmask.svg" /></p>
 
         <p>The softmax is computed row-wise, which means whenever a GPU has received all the tokens of a row, it can be computed. We see that GPU 1 can immediately compute it, as it starts with tokens 1-4 and doesn’t need to receive any information from any other GPUs. However, GPU 2 will need to wait for the second round to receive tokens 1-4 and thus have all the values for tokens 1-8. GPU 1 also seems to perform much less work than all the other GPUs.</p>
         
@@ -1418,14 +1447,14 @@
             <p>We show here Zig-Zag Attention, which slightly differs from Striped Attention<d-cite bibtex-key="brandon2023fasterring"></d-cite>. For details on the differences, check <a href="https://github.com/zhuzilin/ring-flash-attention/issues/2#issuecomment-2236746166">this GitHub discussion</a>.</p>
         </aside>
 
-        <p><img alt="cp_zigzagmask.svg" src="/assets/images/cp_zigzagmask.svg" /></p>
+        <p><img alt="cp_zigzagmask.svg" src="assets/images/cp_zigzagmask.svg" /></p>
 
         <p>You’ll also see that in order to complete all rows, each GPU will need information from all the other GPUs.</p>
         
         <p>We have two general ways to overlap computation and communication: either by performing a general all-gather, regrouping all the keys and values on each GPU at the same time (in a ZeRO-3 type of way), or by gathering them from each GPU on each GPU as needed.</p>
 <!-- RH: In these figures, change "AllGather Activs" and "P2P Activs" to "All-gather activs" and "P2P activs" (or should that be "All-to-all activs")? -->        
-        <p><img alt="cp_overlap_allgather.svg" src="/assets/images/cp_overlap_allgather.svg" /></p>
-        <p><img alt="cp_overlap_all2all.svg" src="/assets/images/cp_overlap_all2all.svg" /></p>
+        <p><img alt="cp_overlap_allgather.svg" src="assets/images/cp_overlap_allgather.svg" /></p>
+        <p><img alt="cp_overlap_all2all.svg" src="assets/images/cp_overlap_all2all.svg" /></p>
 
         <p>The key differences between these two implementations lie in their communication patterns and memory usage:</p>
         
@@ -1455,7 +1484,7 @@
 
         <div class="audio-container">
             <audio controls>
-                <source src="../assets/audio/5D Parallelism_ Scaling Deep Learning Model Training Strategies.wav" type="audio/wav">
+                <source src="assets/audio/5D Parallelism_ Scaling Deep Learning Model Training Strategies.wav" type="audio/wav">
                 Your browser does not support the audio element.
               </audio>
               <div class="figure-legend">
@@ -1475,7 +1504,7 @@
             });
         </script> -->
 
-        <!-- <p><img alt="pp_comm_bandwidth.svg" src="/assets/images/pp_comm_bandwidth.svg" /></p> -->
+        <!-- <p><img alt="pp_comm_bandwidth.svg" src="assets/images/pp_comm_bandwidth.svg" /></p> -->
         <div class="figure-legend"><p>Inter-node communication bandwidth measurements across different node counts, showing median (lines) and 5th-95th percentile ranges (shaded areas) for all-reduce, all-gather, and reduce-scatter operations</p></div> <!-- RH: Should the figure and legend use all-reduce, all-gather, and reduce-scatter instead of AllReduce, AllGather, and ReduceScatter, to match the rest of the text? -->
 
         <p>Sequence and context parallelism can help for long sequences, but they don’t help much if the root cause of our memory issues is not the sequence length but rather the size of the model itself. For large models (70B+ parameters), the size of the weights alone can already push past the limits of the 4-8 GPUs on a single node. We can solve this issue by summoning another parallelism dimension: <em>pipeline parallelism</em> (PP).</p>
@@ -1493,7 +1522,7 @@
                 frame.style.width = frame.contentWindow.document.documentElement.scrollWidth + 'px';
             });
         </script> -->
-        <!-- <p><img alt="pp_memoryusage.svg" src="/assets/images/pp_memoryusage.svg" /></p> -->
+        <!-- <p><img alt="pp_memoryusage.svg" src="assets/images/pp_memoryusage.svg" /></p> -->
 
         <p>Looking at the figure above, we notice something interesting: while the model parameters are nicely split across GPUs, the activation memory remains the same on each GPU! which means we don't save any activation memory with this approach.</p>
 
@@ -1516,7 +1545,7 @@
 
         <p>Indeed, reader! The main challenge in pipeline parallelism is how to efficiently circumvent the sequential nature of PP to keep our GPUs busy at all times and avoid having one GPU computing while the others are waiting. Here's how our GPU utilization looks when doing a naive and simple forward and backward pass through the model (here, the numbers indicate the model layers):</p>
 
-        <p><img alt="image.png" src="/assets/images/pp_afab.svg" /></p>
+        <p><img alt="image.png" src="assets/images/pp_afab.svg" /></p>
         <div  class="figure-legend"><p>An example of pipeline parallelism for a model with 16 layers distributed across 4 GPUs. The numbers correspond to the layer IDs.</p>
         </div>
         <p>The remaining idle time is indicated in gray and usually called the “bubble.” The sight of this probably broke your heart after we spent so much time optimizing throughput.</p>
@@ -1535,7 +1564,7 @@
 
         <p>Let’s take a first tool out of our toolbox and think about splitting our batch into smaller bite-sized portions that can be processed in parallel (or almost), like we did before in the DP approach, for instance. Now, when the second GPU is busy processing micro-batch 1, the first GPU can already start processing micro-batch 2. Here is a schedule using eight micro-batches:</p>
         
-        <p><img alt="pp_afab2.svg" src="/assets/images/pp_afab2.svg" /></p>
+        <p><img alt="pp_afab2.svg" src="assets/images/pp_afab2.svg" /></p>
 
         <aside>Before, the numbers in the diagram indicated the layers, but in all pipeline parallel plots from here on they indicate micro-batches. You can think of each square here as containing several layers, as seen in the previous figure. </aside>
 
@@ -1568,7 +1597,7 @@
 
         <p>This schedule is called <strong><em>one forward, one backward (1F1B)</em></strong> because the middle/steady state involves alternately performing one forward and one backward pass. The general idea is to start performing the backward pass as soon as possible. The schedule looks like this:</p>
         
-        <p><img alt="image.png" src="/assets/images/pp_1f1b.svg" /></p>
+        <p><img alt="image.png" src="assets/images/pp_1f1b.svg" /></p>
 
         <p>If you count carefully, you'll see that the bubble still has the same size, so our training efficiency is not significantly improved. However, we only need to store activations for <d-math>p</d-math> micro-batches (where <d-math>p</d-math> is the degree of pipeline parallelism) instead of <d-math>m</d-math> (where <d-math>m</d-math> is the number of micro-batches), which can reduce the activation memory explosion we had in the AFAB schedule. As a consequence, we can add more micro-batches, which then will actually reduce the bubble.</p>
 
@@ -1589,7 +1618,7 @@
         
         <p>Let's take a look at how the 1F1B pipeline parallelism schedule scales in practice with some benchmarks on our cluster:</p>
         <!-- RH: In this figure, initial-cap "schedule" and change "Tokens/s/GPU" to "Tokens/sec/GPU" (x3, to match the 4th label and the other figures)? -->
-        <p><img alt="Throughput scaling of pipeline parallelism with varying micro-batch sizes" src="/assets/images/pp_1f1b_scaling.png" /></p>
+        <p><img alt="Throughput scaling of pipeline parallelism with varying micro-batch sizes" src="assets/images/pp_1f1b_scaling.png" /></p>
         
         <p>On the left, with a number of micro-batches equal to or less than the PP degree minus one (<d-math>m = p - 1</d-math>), we see how detrimental the pipeline bubble can be - performance is low and even drops as we scale PP. The righthand plot shows that using many more micro-batches than the PP degree (<d-math>m = 32 \gg p - 1</d-math>) helps improve low-PP-degree performance, though it's still limited at very large PP degrees. In practice, it's not possible to arbitrarily increase the number of micro-batches to maintain the ratio of <d-math>m \gg p - 1</d-math> since we're ultimately constrained by the target global batch size. With a maximal possible number of micro-batches as we add more PP degrees, we'll ultimately have to increase the bubble size according to <d-math>r_{bubble} = \frac{p - 1}{m}</d-math>.</p>
         
@@ -1607,7 +1636,7 @@
         
         <p>This can be seen in general as a kind of “looping pipeline” where a micro-batch will move in circles from one GPU to the next as it goes through the forward pass through the model. Let's take a look at how this works:</p>
         
-        <p><img alt="pp_1f1b_interleaved.svg" src="/assets/images/pp_1f1b_interleaved.svg" /></p>
+        <p><img alt="pp_1f1b_interleaved.svg" src="assets/images/pp_1f1b_interleaved.svg" /></p>
 
         <div class="figure-legend"><p>An example of interleaved pipeline parallelism for a model with layers distributed across 4 GPUs. Numbers still correspond to the micro-batch IDs, but for clarity we've colored the first and last layers of the model differently to illustrate how layers are spread across GPUs.</p>
           </div>
@@ -1634,14 +1663,14 @@
                 frame.style.width = frame.contentWindow.document.documentElement.scrollWidth + 'px';
             });
         </script> -->
-        <!-- <p><img alt="pp_bubblesize.png" src="/assets/images/pp_bubblesize.png" /></p> -->
+        <!-- <p><img alt="pp_bubblesize.png" src="assets/images/pp_bubblesize.png" /></p> -->
 
 
         <p>Scheduling also becomes more complex here, as we have to decide on a given GPU and at a given moment whether we are prioritizing earlier micro-batches going through later layers – meaning that we close the forward and backward loops as fast as possible (the “depth-first” approach, which prioritizes getting batches out of the model as fast as possible) – or later micro-batches going through earlier layers (the “breadth-first” approach, which prioritizes filling in the pipeline as much as possible). This choice is explained in detail in the "Breadth-Fist Pipeline Parallelism" paper<d-cite bibtex-key="lamypoirier2023breadthfirstpipelineparallelism"></d-cite>.</p>
         
         <p>You now have all the elements to understand the pipeline parallelism approach in Llama 3.1, which uses a 1F1B setup with interleaved stages and a priority setting tunable between depth-first and breadth-first:</p>
 
-        <p><img alt="pp_llama3.1_schedule.png" src="/assets/images/pp_llama3.1_schedule.png" /></p>
+        <p><img alt="pp_llama3.1_schedule.png" src="assets/images/pp_llama3.1_schedule.png" /></p>
 
         <p>However, we haven’t reached the end of the possible pipeline schedules, and recently some methods have been proposed to <strong>reduce the bubble to virtually zero</strong>! These techniques were, for instance, used in the DeepSeek-V3/R1 implementation<d-cite bibtex-key="deepseekai2024deepseekv3technicalreport"></d-cite>. Piqued your curiosity? Let’s have a final quick look at these magical schedules before we leave the world of pipeline parallelism!</p>
 
@@ -1655,18 +1684,18 @@
     
         <p>While the output of <d-math>B</d-math>, the backward pass for the inputs, is necessary for performing the backward pass of the lower layers, the backward pass of the weights, <d-math>W</d-math>, is not and generally only needs to be performed before the optimizer step. We can see that in the following diagram (from the Zero Bubble paper): </p>
 
-        <p><img alt="image.png" src="/assets/images/pp_zerobubble_compgraph.png" /></p>
+        <p><img alt="image.png" src="assets/images/pp_zerobubble_compgraph.png" /></p>
         
         <p>This means <d-math>W</d-math> can be flexibly scheduled anywhere after the corresponding <d-math>B</d-math> of the same stage. This allows for strategic placement of <d-math>W</d-math> to fill the pipeline bubbles. The ZB-H2 schedule at the top right is an example of a (theoretical) schedule with zero bubble taking advantage of this fine-grained decomposition.</p>
 
-        <p><img alt="image.png" src="/assets/images/pp_zerobubble_ppschedule.png" /></p>
+        <p><img alt="image.png" src="assets/images/pp_zerobubble_ppschedule.png" /></p>
 
         <div class="figure-legend"><p>On the top (Figure 2 from the Zero Bubble paper): the classical 1F1B schedule, interleaving forward and backward passes but keeping a coarse-grained backward pass. On the bottom (Figure 3 from the Zero Bubble paper): two handcrafted schedules splitting the backward pass into finer-grained <d-math>B</d-math> and <d-math>W</d-math> operations. The lower schedule is an example of a (theoretical) zero bubble schedule taking advantage of this fine-grained decomposition.</p>
         </div>
 
         <p>DeepSeek’s DualPipe, introduced with its V3 technical report <d-cite bibtex-key="deepseekai2024deepseekv3technicalreport"></d-cite>, is an extension of this decomposed approach to the additional case of two streams propagating from both ends of the PP dimension, with these streams being interleaved to further minimize idle time in the GPUs. This schedule is displayed in the following scheduling graph - as you can see, it's even more complex than the previous ones:</p>
 
-        <p><img alt="image.png" src="/assets/images/pp_zerobubble_dualpipe.png" /></p>
+        <p><img alt="image.png" src="assets/images/pp_zerobubble_dualpipe.png" /></p>
 
         <p>In general, fully optimizing such complex schedules involves carefully measuring the duration of the various fine-grained operations and solving an Integer Linear Programming (ILP) problem to minimize the final bubble time. (See, for instance, the Zero Bubble paper<d-cite bibtex-key="qi2023zerobubblepipelineparallelism"></d-cite> for a discussion of the heuristics and algorithms used to perform such scheduling.) As a result, the zero bubble and DualPipe schedules are too complex for us to give code snippets here, but you should have a general idea of the concepts involved. </p>
 
@@ -1680,7 +1709,7 @@
 
         <p>The Mixture of Experts paradigm has recently gained traction and visibility with models such as GPT-4, Mixtral<d-cite bibtex-key="jiang2024mixtralexperts"></d-cite>, and DeepSeek-V3/R1. The basic idea is that instead of having a single feedforward module per layer, we can have several parallel modules and route tokens through them to be processed differently.</p>
 
-        <p><img alt="ep_moe.png" src="/assets/images/ep_moe.png" /></p>
+        <p><img alt="ep_moe.png" src="assets/images/ep_moe.png" /></p>
         <div class="figure-legend"><p>Illustration of an MoE layer taken from the Switch Transformers paper<d-cite bibtex-key="fedus2022switchtransformersscalingtrillion"></d-cite></p>
         </div>
         
@@ -1688,7 +1717,7 @@
 
         <p>In practice, EP is typically used in conjunction with other forms of parallelism, such as data parallelism. This is because EP only affects the MoE layers and doesn't shard the input tokens (unlike context parallelism, which shards tokens along the sequence length dimension). This means our GPUs would be doing redundant computation for all the non-MoE blocks if we only used EP. By combining EP with DP, we can efficiently shard both the experts and the input batches across our GPUs, as you can see in the simplified diagram below:</p>
 
-        <p><img alt="ep_schema.png" src="/assets/images/ep_schema.png" /></p>
+        <p><img alt="ep_schema.png" src="assets/images/ep_schema.png" /></p>
         <div class="figure-legend"><p>Source: "A Survey on Mixture of Experts"<d-cite bibtex-key="cai2024surveymixtureexperts"></d-cite> </p>
         </div>
         <p>But let's not get ahead of ourselves - we'll talk about all the interactions between different parallelism strategies in the following section, so don't worry if you don't understand this last diagram yet.</p>
@@ -1771,7 +1800,7 @@
 
         <div class="large-image-background-transparent">
             <div class="boxed-image">
-            <img alt="TP & SP diagram" src="/assets/images/5d_nutshell_tp_sp.svg" style="width: 1200px; max-width: none;" />
+            <img alt="TP & SP diagram" src="assets/images/5d_nutshell_tp_sp.svg" style="width: 1200px; max-width: none;" />
         </div>
         </div>
 
@@ -1786,7 +1815,7 @@
         
         <div class="large-image-background-transparent">
             <div class="boxed-image">
-            <img alt="CP diagram" src="/assets/images/5d_nutshell_cp.svg" style="width: 1200px; max-width: none;" />
+            <img alt="CP diagram" src="assets/images/5d_nutshell_cp.svg" style="width: 1200px; max-width: none;" />
         </div>
         </div>
         
@@ -1795,7 +1824,7 @@
         
         <div class="large-image-background-transparent">
             <div class="boxed-image">
-            <img alt="EP diagram" src="/assets/images/5d_nutshell_ep.svg" style="width: 1200px; max-width: none;" />
+            <img alt="EP diagram" src="assets/images/5d_nutshell_ep.svg" style="width: 1200px; max-width: none;" />
         </div>
         </div>
         <div class="note-box">
@@ -1853,7 +1882,7 @@
         <!-- RH: OK that this figure uses FSDP and not ZeRO-3? If you happen to be editing it, I'd also use "All-gather" instead of "AllGather". -->
         <div class="large-image-background-transparent">
             <div class="boxed-image">
-            <p><img alt="image.png" src="/assets/images/5d_full.svg" style="width: 1200px; max-width: none;"/></p>
+            <p><img alt="image.png" src="assets/images/5d_full.svg" style="width: 1200px; max-width: none;"/></p>
             </div> 
             </div>
 
@@ -1861,7 +1890,7 @@
         <!-- RH: Zero-3 in this figure should be ZeRO-3 (x2). -->
         <div class="large-image-background-transparent">
             <div class="boxed-image">
-            <img alt="5Dparallelism_8Bmemoryusage.svg" src="/assets/images/5Dparallelism_8Bmemoryusage.svg" style="width: 1200px; max-width: none;"/>
+            <img alt="5Dparallelism_8Bmemoryusage.svg" src="assets/images/5Dparallelism_8Bmemoryusage.svg" style="width: 1200px; max-width: none;"/>
         </div> 
         </div>
 
@@ -2016,7 +2045,7 @@
         
         <div class="large-image-background-transparent">
             <div class="boxed-image">
-        <p><img alt="image.png" src="/assets/images/what_we_learnt_heatmap.svg" /></p>
+        <p><img alt="image.png" src="assets/images/what_we_learnt_heatmap.svg" /></p>
     </div>
 </div>
 <div class="figure-legend">
@@ -2063,7 +2092,7 @@
 
         <!-- <p>We can roughly summarize the journey to the best configuration in the following diagram:</p>
 
-        <p><img alt="image.png" src="/assets/images/placeholder.png" /></p>
+        <p><img alt="image.png" src="assets/images/placeholder.png" /></p>
  -->
 
         <!-- <p>This concludes our very deep dive into 5D parallelism. However, besides scaling our model efficiently across GPUs there is another way to improve model throughput and memory management. It involves a better understanding of how GPU operate at a low level and is among the necessary knowledge to be able to take maximal advantage of large GPU clusters.</p> -->
@@ -2084,7 +2113,7 @@
 
         <div class="audio-container">
             <audio controls>
-                <source src="../assets/audio/GPU Deep Dive_ Optimizing Model Performance and Memory Efficiency.wav" type="audio/wav">
+                <source src="assets/audio/GPU Deep Dive_ Optimizing Model Performance and Memory Efficiency.wav" type="audio/wav">
                 Your browser does not support the audio element.
               </audio>
               <div class="figure-legend">
@@ -2108,12 +2137,12 @@
     
         <aside> In this primer, we’ll keep the discussion at the conceptual level that is necessary for the rest of our presentation.</aside>
 
-        <p><img alt="image.png" src="/assets/images/diving_primergpu.svg" /></p>
+        <p><img alt="image.png" src="assets/images/diving_primergpu.svg" /></p>
         <div class="figure-legend"><p>Source: https://blog.codingconfessions.com/p/gpu-computing</p></div>
     
         <p>The memory side is also highly hierarchical, with several layers of cache and memory. <em>Registers</em> are the smallest units and are private to the threads during executions. <em>Shared memory</em> and the <em>L1 cache</em> are shared between the threads running on a single SM. Higher up is the <em>L2 cache</em> shared by all SMs, and finally there is the <em>global memory</em>, which is the largest memory on the GPU (the advertised 80 GB for an H100, for instance) but also the slowest to access and query.</p>
     
-        <p><img alt="image.png" src="/assets/images/diving_primergpu2.svg" /></p>
+        <p><img alt="image.png" src="assets/images/diving_primergpu2.svg" /></p>
         <div class="figure-legend"><p>Source: https://www.youtube.com/watch?v=ZQKMZIP3Fzg</p></div>
 
         <p>The goal when using a GPU is to run as many workloads as possible, in parallel, on the available cores, by taking advantage of this hierarchical organization of compute/memory resources.</p>
@@ -2174,9 +2203,9 @@
             </div>
         </div>
 
-        <!-- <p><img alt="image.png" src="/assets/images/placeholder.png" /></p>
+        <!-- <p><img alt="image.png" src="assets/images/placeholder.png" /></p>
         <p>Figure 5: Host code for a CUDA kernel for adding two vectors from https://blog.codingconfessions.com/p/gpu-computing</p>
-        <p><img alt="image.png" src="/assets/images/placeholder.png" /></p>
+        <p><img alt="image.png" src="assets/images/placeholder.png" /></p>
  -->
         <p>Kernels are generally scheduled as follows:</p>
         
@@ -2213,9 +2242,9 @@
 
         <p>As you can see in the following graph, there's a remarkable performance difference between the compiled and non-compiled versions, especially given that we only added a decorator (<d-math>N<d-math> here is the number of columns):</p>
 <!-- RH: Should the label at the top of this figure just say "Performance Comparison of Torch and @torch.compile", as Triton isn't included in this one? -->
-        <p><img alt="image.png" src="/assets/images/torch-compile-triton.png" /></p>
+        <p><img alt="image.png" src="assets/images/torch-compile-triton.png" /></p>
 
-        <!-- <p><img alt="image.png" src="/assets/images/dp_scaling.svg"/></p> -->
+        <!-- <p><img alt="image.png" src="assets/images/dp_scaling.svg"/></p> -->
 
         <p>However, if this performance increase is insufficient, you can consider implementing Triton kernels. As a starting point, you can take a look at the Triton kernel generated by <code>@torch.compile</code>. To do so, you simply need to set the environment variable <code>TORCH_LOGS</code> to <code>"output_code"</code>:</p>
 
@@ -2274,7 +2303,7 @@
         
         <p>When we benchmark the generated kernel using <code>triton.testing.Benchmark</code>, we have the following performance:</p>
 
-        <p><img alt="image.png" src="/assets/images/torch-compile-triton-kernel.png" /></p>
+        <p><img alt="image.png" src="assets/images/torch-compile-triton-kernel.png" /></p>
 
         <p>This standalone kernel even demonstrates superior performance with smaller sizes compared to <code>@torch.compile</code>, but this is likely just an artifact of the compilation time of <code>torch.compile</code>. In any case, instead of starting from scratch, remember that you can start from such generated kernels and focus your attention on optimizing their performance, saving you a lot of time. </p>
         
@@ -2319,20 +2348,20 @@
 
         <p>Here’s an excellent visualization of the kernel from Simon Boehm’s fantastic <a href="https://siboehm.com/articles/22/CUDA-MMM">blog post</a>: </p> 
         
-        <p><img alt="image.png" src="/assets/images/memorycoalescing.png" /></p>
+        <p><img alt="image.png" src="assets/images/memorycoalescing.png" /></p>
 
         <p>However, when profiling this kernel with a tool like <code>ncu</code>, we can see issues, including low memory throughput and uncoalesced memory accesses:</p>
 
         <div class="large-image-background-transparent">
             <div class="boxed-image">
-            <img width="1400px" alt="image.png" src="/assets/images/memorycoalescing2.png" />
-            <img width="1400px" alt="image.png" src="/assets/images/memorycoalescing3.png" />
+            <img width="1400px" alt="image.png" src="assets/images/memorycoalescing2.png" />
+            <img width="1400px" alt="image.png" src="assets/images/memorycoalescing3.png" />
         </div>
         </div>
 
         <p>The reason for this is that in this kernel, two threads in the same block with thread IDs <code>(0, 0)</code> and <code>(1, 0)</code> (which will end up in the same warp) will both load from the same column of matrix <strong>B</strong> but different rows of matrix <strong>A</strong>. Since matrix elements are stored in row-major order (meaning row elements are in consecutive memory addresses, as shown in the figure below), thread <code>(0, 0)</code> will load <d-math>A_{0,0}</d-math> and thread <code>(1, 0)</code> will load <d-math>A_{1,0}</d-math> in the first iteration, <d-math>i = 0</d-math>. These elements are not stored close to each other in memory, and this misalignment will be present at each iteration, thereby preventing memory accesses from being coalesced.</p>
         
-        <p><img alt="image.png" src="/assets/images/memorycoalescing4.png" /></p>
+        <p><img alt="image.png" src="assets/images/memorycoalescing4.png" /></p>
 
         
         <p>To improve the performance of our kernel, we can change the way coordinates <code>x</code> and <code>y</code> are calculated to the following: </p>
@@ -2356,7 +2385,7 @@
         
         <div class="large-image-background-transparent">
             <div class="boxed-image">
-            <p><img width="1200px" alt="image.png" src="/assets/images/memorycoalescing5.png" /></p>
+            <p><img width="1200px" alt="image.png" src="assets/images/memorycoalescing5.png" /></p>
         </div>
         </div>
 
@@ -2373,7 +2402,7 @@
         
         <p>In the tiling approach, each iteration involves all threads within a block cooperatively loading two tiles — one from matrix <strong>A</strong> and another from matrix <strong>B</strong> — into shared memory. Specifically, the threads load a tile of matrix <strong>A</strong> (of size <code>BLOCK_SIZE_M</code> by <code>BLOCK_SIZE_K</code>) and a tile of matrix <strong>B</strong> (of size <code>BLOCK_SIZE_K</code> by <code>BLOCK_SIZE_N</code>). Once the tiles are in shared memory, the threads perform matrix multiplication on these tiles, enabling efficient computation since all the necessary data is quickly accessible. The results of the tile multiplication are stored in an accumulation matrix that holds intermediate results. After each iteration, the results from the current tile multiplication are added to this accumulation matrix, continuing until all tiles from both matrices have been processed.</p>
         
-        <p><img alt="image.png" src="/assets/images/tiling.png" /></p>
+        <p><img alt="image.png" src="assets/images/tiling.png" /></p>
         <div class="figure-legend">
         <p>From <a target="_blank" href="https://cnugteren.github.io/tutorial/pages/page4.html">https://cnugteren.github.io/tutorial/pages/page4.html</a></p>
     </div>
@@ -2421,7 +2450,7 @@
 
         <p>The tiling technique has significantly improved the performance of our kernel. However, when analyzing the warp states, which quantify how many cycles were spent in each state, we observe the following:</p>
 
-        <p><img alt="image.png" src="/assets/images/threadcoarsening.png" /></p>
+        <p><img alt="image.png" src="assets/images/threadcoarsening.png" /></p>
 
 
         <p>The meaning of these cryptic state names can be found in <a href="https://docs.nvidia.com/nsight-compute/ProfilingGuide/index.html#metrics-reference">NVIDIA's Kernel Profiling Guide</a>, in the "Warp Stall Reasons" section. There, we see that <code>smsp__pcsamp_warps_issue_stalled_mio_throttle</code> indicates "Warp was stalled waiting for the MIO (memory input/output) instruction queue to be not full. This stall reason is high in cases of extreme utilization of the MIO pipelines, which include special math instructions, dynamic branches, as well as shared memory instructions. When caused by shared memory accesses, trying to use fewer but wider loads can reduce pipeline pressure."</em></p>
@@ -2446,13 +2475,13 @@
         <p>This idea is beautifully illustrated by <a href="https://upload.wikimedia.org/wikipedia/commons/b/b2/Hausziege_04.jpg">Horace He</a> in <a href="https://horace.io/brrr_intro.html">these diagrams:</a></p>
         <div style="display: flex; gap: 20px; align-items: flex-start;">
             <div style="width: 50%;">
-                <img alt="image.png" src="/assets/images/fused_kernels1.png" style="width: 100%;" />
+                <img alt="image.png" src="assets/images/fused_kernels1.png" style="width: 100%;" />
                 <div class="figure-legend">
                 <p>A sequence of kernels requiring back and forth between global memory and compute units</p>
             </div>
             </div>
             <div style="width: 50%;">
-                <img alt="image.png" src="/assets/images/fused_kernels2.png" style="width: 100%;" />
+                <img alt="image.png" src="assets/images/fused_kernels2.png" style="width: 100%;" />
                 <div class="figure-legend">
                     <p>Instead of sending our triangle back to global memory just to read it back again, we do all of our operations in one go.</p>
                 </div>
@@ -2476,13 +2505,13 @@
 
         <p>A basic implementation of the attention mechanism involves a lot of transfer between memory and workers. It requires materializing the <strong>S</strong> matrix (where S = QK^T, the attention scores) and the <strong>P</strong> matrix (where P = softmax(S), the normalized attention weights) in HBM, which means that the results need to be sent to HBM and then back to SRAM for the next computations:</p>
 
-        <p style="text-align: center"><img alt="image.png" src="/assets/images/flashattn.png" style="width: 500px" /></p>
+        <p style="text-align: center"><img alt="image.png" src="assets/images/flashattn.png" style="width: 500px" /></p>
         
         <p>Since bandwidth is much lower in HBM, this introduces a severe bottleneck in the attention computation. Can we do better? <a href="https://upload.wikimedia.org/wikipedia/commons/b/b2/Hausziege_04.jpg">Tri Dao</a> says yes!</p>
 
         <p>The key element is to compute the <strong>S</strong> matrix in small pieces that can fit in the smaller shared memory of the SM. But we can do even better and avoid materializing the very large <strong>S</strong> matrix altogether, in favor of keeping only the necessary statistics for computing the normalization factor of the softmax. So, we can compute part of <d-math>O</d-math> directly in one computation in SRAM rather than moving intermediate results back and forth. In this case, not only do we make use of the shared memory, but we also release the memory bottleneck resulting from materializing one of the largest activation matrices in the model (at long context length): the attention matrix.</p>
 
-        <p><img alt="image.png" src="/assets/images/flashattn2.png" /></p>
+        <p><img alt="image.png" src="assets/images/flashattn2.png" /></p>
         <div class="figure-legend"><p>Source: FlashAttention paper<d-cite bibtex-key="dao2022flashattention"></d-cite></p></div>
 
         <p>The idea of FlashAttention resolves so many bottlenecks in model training that it has quickly become the default way to perform attention in all transformers. Notably:</p>
@@ -2514,7 +2543,7 @@
             <li>Mantissa: determines the significant figures of the number</li>
         </ul>
 
-        <p><img width="500px" alt="sign-mantissa-exponent.svg" src="/assets/images/sign-mantissa-exponent.svg" /></p>
+        <p><img width="500px" alt="sign-mantissa-exponent.svg" src="assets/images/sign-mantissa-exponent.svg" /></p>
 
 
 
@@ -2575,14 +2604,14 @@
 
         <p>Reducing the total number of bits comes at a price (no free lunch here either), but we have some control over how to pay: we can sacrifice bits in either the mantissa or the exponent. For this reason, there also exist two float8 (FP8) formats, named according to the exponent and mantissa, so we can flexibly choose the most appropriate format. Let's take a look at the possible range of numbers for each format:</p>
 
-        <p><img alt="image.png" src="/assets/images/mixedprecision.png" /></p>
+        <p><img alt="image.png" src="assets/images/mixedprecision.png" /></p>
 
 
         <p>We can see that float32 spans 80 orders of magnitude, and float16 sacrifices a lot of range while bfloat16 maintains the full range. The two float8 formats reduce the range even further: e5m2 can maintain the float16 range, but e4m3 has an even smaller range.</p>
 
         <p>How come some formats are able to maintain the full range while others aren't? Let's investigate their resolutions by plotting 10,000 points between 1 and 2. Each point will be rounded to the nearest representable number in each format:</p>
 
-        <p><img alt="image.png" src="/assets/images/mixedprecision_2.png" /></p>
+        <p><img alt="image.png" src="assets/images/mixedprecision_2.png" /></p>
 
         <p>We can see here that although bfloat16 maintains the range of float32 (unlike float16), it does this at the cost of sacrificing more precision. In the case of float8 the situation is even more dire: e4m3 can represent only 7 and e5m2 only 3 numbers in the interval [1,2].</p>
 
@@ -2618,13 +2647,13 @@
         <p>We know that instability increases as learning rates rise for a fixed model size<d-cite bibtex-key="wortsman2023smallscaleproxieslargescaletransformer"></d-cite>, making FP8 pretraining particularly tricky.</p>
         
         <p>Here is an example of a typically divergent loss curve for FP8 training:</p>
-        <iframe class="l-body-outset" id="plotFP8Loss" src="/assets/data/fp8/fp8_training_loss_curves.html" height="520" width="1000" scrolling="no" frameborder="0"></iframe>
+        <iframe class="l-body-outset" id="plotFP8Loss" src="assets/data/fp8/fp8_training_loss_curves.html" height="520" width="1000" scrolling="no" frameborder="0"></iframe>
         <!-- Hynek uncomment this once it's added to -->
         <!-- <div class="l-body-outset" id="fragment-fp8_training_loss_curves"></div> -->
 
         <p>The first successful very large scale training with FP8 mixed precision was publicly reported in the DeepSeek-V3 technical report<d-cite bibtex-key="deepseekai2024deepseekv3technicalreport"></d-cite>. The authors carefully analyzed each operation of the forward pass (<em>Fprop</em>) as well as the activation (<em>Dgrad</em>) and weight (<em>Wgrad</em>) backward passes. Similar to BF16 mixed precision training, some aggregations and master weights are kept in higher precision while the operations themselves are performed in FP8.</p>
         
-        <p><img alt="image.png" src="/assets/images/fp8_diagram.png" /></p>
+        <p><img alt="image.png" src="assets/images/fp8_diagram.png" /></p>
 
         <p>In order to switch from high precision (e.g., FP32 or BF16) to lower precision (e.g., FP16 or FP8) with a smaller range, we need to normalize the range of activation values, for instance by computing their absolute maximum. DeepSeek-V3 further introduced a specific quantization scheme where the ranges are normalized per tile: 1x128 for inputs/activations and 128x128 for weights and scale elements. This makes the normalization less strongly impacted by outlier values in the activations. The authors also proposed a number of additional tricks to further reduce the memory and communication footprint, which you can read about in section 3.3 of the technical report<d-cite bibtex-key="deepseekai2024deepseekv3technicalreport"></d-cite>. </p>
 
@@ -2718,7 +2747,7 @@
         
         <p>Congratulations, dear reader, you made it to the end! We've completed quite a journey: we started with exploring how to train a simple model on a single GPU and went all the way to mastering various intricate techniques used to efficiently train massive language models like Llama-405B and DeepSeek-V3 on thousands of GPUs. By now, you can read a diagram like Llama-3's 4D parallel setup with (relative) ease:</p>
         
-        <p><img alt="image.png" src="/assets/images/conclusion_llama3_parallelism.png" /></p>
+        <p><img alt="image.png" src="assets/images/conclusion_llama3_parallelism.png" /></p>
 
         <p>Orchestrating large clusters of GPUs to train LLMs efficiently is no easy feat, but you've learned how to optimize computations and communications between GPUs such that they run with maximum utilization at all times. As you've seen, this involves choosing the right parallelization strategy for a given model and cluster size, overlapping communication and computation where possible, and writing custom kernels that take into account the hardware layout to perform an operation as fast as possible on the GPU.</p>
 
@@ -3023,7 +3052,7 @@
         
         <p>The general setup is that we have a number of independent nodes, which could be CPU cores, GPUs, or compute nodes. Each performs some computation, and then we want to communicate the result or parts of it to the other nodes for the next computation step (<d-math>t+1</d-math>).</p>
         
-        <p style="text-align: center"><img alt="image.png" src="/assets/images/a0_general.png" style="width: 400px" /></p>
+        <p style="text-align: center"><img alt="image.png" src="assets/images/a0_general.png" style="width: 400px" /></p>
 
 
         <p>Maybe we need to send the result from one node to all other nodes, or to sum all the intermediate results from each node to report the overall result. Usually, there is one node with an elevated status that plays a central role, here denoted with <em>root</em>, that is the target or source of some operations. Let’s start with one of the simplest primitives: a Broadcast operation.</p>
@@ -3034,7 +3063,7 @@
 
         <p>A very common pattern is that you have some data on node 1 and you want to share it with all the other nodes so they can do some computation with the data. The Broadcast operation does just that:</p>
         
-        <p style="text-align: center"><img alt="image.png" src="/assets/images/a0_broadcast.png" style="width: 400px" /></p>
+        <p style="text-align: center"><img alt="image.png" src="assets/images/a0_broadcast.png" style="width: 400px" /></p>
 
 
         <p>Collective operations are provided natively by PyTorch, so we can easily write a small example that demonstrates how broadcasting works. We first need to initialize a process group with <code>dist.initi_process_group</code>, which sets up the communication backend (we’ll talk about NCCL later). It determines how many workers (a.k.a. nodes) exist and assigns a rank to each one (which we can get with <code>dist.get_rank</code>). Finally, it establishes a connection between the workers.</p>
@@ -3083,7 +3112,7 @@
         
         <p>Reduce patterns are among the most fundamental patterns in distributed data processing. The idea is that you want to combine the data present on each node through a function <code>f()</code>, which may perform, for instance, summation or averaging. In the Reduce paradigm the result is sent to the root node only, whereas in the AllReduce case the result is broadcast to all nodes:</p>
         
-        <p style="text-align: center"><img alt="image.png" src="/assets/images/a0_reduce_allreduce.png" style="width: 1000px" /></p>
+        <p style="text-align: center"><img alt="image.png" src="assets/images/a0_reduce_allreduce.png" style="width: 1000px" /></p>
 
 
         <p>Of course, there's no magic “free-flying” node that can perform this operation itself; generally, each node does a partial computation, with the nodes organized in a ring or tree structure. Here’s a simple example: let’s say we need to compute a sum of numbers on each nodes and our nodes are connected in a ring pattern. The first node sends its number to a neighbor, which adds its number to the received number before forwarding it to the next neighbor. At the end of a round through the ring of nodes, the first node will receive the total sum.</p>
@@ -3144,7 +3173,7 @@
         
         <p>Gather and AllGather are quite similar to the Broadcast operation in that they allow distributing data among nodes without modification. The main difference to Broadcast is that there is not one value we need to share from one node to all other nodes; instead, each node has an individual chunk of data, and we want to either gather all the data on one node (in the case of Gather) or gather all the data on all nodes (in the case of AllGather). A picture being worth a thousand words, let’s take a look:</p>
 <!-- RH: Is this image correct, or should there also be solid lines from 1 to 2 and from 3 to 2 on the right? -->
-        <p style="text-align: center"><img alt="image.png" src="/assets/images/a0_gather_allgather.png" style="width: 1000px" /></p>
+        <p style="text-align: center"><img alt="image.png" src="assets/images/a0_gather_allgather.png" style="width: 1000px" /></p>
 
         <p>The dashed lines indicate that some data actually doesn’t move at all (since it’s already present on the node).</p>
 
@@ -3224,7 +3253,7 @@
 
         <p>The ReduceScatter pattern is slightly more complex. As in the AllReduce case , you apply an operation on the data from all nodes. But unlike AllReduce where each node receives the full output tensor, in ReduceScatter each node only receives a slice of the output tensor. The following image illustrates the difference between these operations:</p>
 
-        <p style="text-align: center"><img alt="image.png" src="/assets/images/a0_scatter_reducescatter.png" style="width: 1000px" /></p>
+        <p style="text-align: center"><img alt="image.png" src="assets/images/a0_scatter_reducescatter.png" style="width: 1000px" /></p>
 
         <p>The Scatter operation is written in code as the opposite of Gather: instead of preparing a list of tensors as a target, we prepare the source data as a list of tensors we want to distribute. We also need to specify the <code>src</code>:</p>
 
@@ -3322,11 +3351,11 @@
 
         <p>Let’s illustrate this with the following gifs, where we have 5 GPUs, each with a tensor of length 5. The first animation shows the ReduceScatter step, where, at the end, each GPU receives the reduced results for a specific chunk of data (the orange rectangle).</p>
 
-        <p style="text-align: center"><img alt="image.png" src="/assets/images/a0_reduce_scatter.gif" style="width: 400px" /></p>
+        <p style="text-align: center"><img alt="image.png" src="assets/images/a0_reduce_scatter.gif" style="width: 400px" /></p>
 
         <p>The next animation shows the AllGather step, where, at the end, each GPU obtains the full results of the AllReduce operation:</p>
 
-        <p style="text-align: center"><img alt="image.png" src="/assets/images/a0_all_gather.gif" style="width: 400px" /></p>
+        <p style="text-align: center"><img alt="image.png" src="assets/images/a0_all_gather.gif" style="width: 400px" /></p>
 
         <p>You may have noticed that each of the <d-math>N</d-math> GPUs sends and receives values <d-math>N-1</d-math> times during both the ReduceScatter and AllGather steps. Each GPU sends <d-math>\frac{K}{N}</d-math> values per transfer, where <d-math>K</d-math> is the total number of values in the array being summed across the GPUs. Therefore, the total amount of data transferred to and from each GPU is <d-math>2 \times (N-1) \times \frac{K}{N}</d-math>. When <d-math>N</d-math> (the number of GPUs) is large, the total amount of data transferred to and from each GPU is approximately <d-math>2 \times K</d-math>, where <d-math>K</d-math> is the total number of parameters.</p>
 
@@ -3345,7 +3374,7 @@
         
         <p><strong><em>Barrier</em></strong> is a simple operation to synchronize all nodes. A barrier is not lifted until all nodes have reached it. Only then are the nodes allowed to continue with further computations:</p>
 
-        <p style="text-align: center"><img alt="image.png" src="/assets/images/a0_barrier.png" style="width: 400px" /></p>
+        <p style="text-align: center"><img alt="image.png" src="assets/images/a0_barrier.png" style="width: 400px" /></p>
 
         <p>We can easily simulate delayed nodes by setting up a different sleep time on each node and seeing how long it takes for all of them to pass the barrier:</p>
 
@@ -3458,7 +3487,7 @@
 
         <div class="large-image-background-transparent">
             <div class="boxed-image">
-                <img alt="image.png" src="/assets/images/a1_kernels.png" style="width: 1200px; max-width: none;" />
+                <img alt="image.png" src="assets/images/a1_kernels.png" style="width: 1200px; max-width: none;" />
             </div>
         </div>
 
@@ -3475,7 +3504,7 @@
 
         <div class="large-image-background-transparent">
             <div class="boxed-image">
-                <img alt="image.png" src="/assets/images/a1_profile_trace.png" style="width: 1200px; max-width: none;" />
+                <img alt="image.png" src="assets/images/a1_profile_trace.png" style="width: 1200px; max-width: none;" />
             </div>
         </div>
 
@@ -3504,7 +3533,7 @@
 
         <div class="large-image-background-transparent">
             <div class="boxed-image">
-                <img alt="image.png" src="/assets/images/a1_ncu.png" style="width: 1200px; max-width: none;" />
+                <img alt="image.png" src="assets/images/a1_ncu.png" style="width: 1200px; max-width: none;" />
             </div>
         </div>
 

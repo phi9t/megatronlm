@@ -25,8 +25,9 @@ Bundled references:
   training parallelism, LLaMA estimates, and GPU notes.
 - `references/ultrascale-playbook.md`: GPU-cluster memory, overlap, ZeRO, TP,
   CP, PP, EP, configuration selection, and Megatron log mapping.
-- `references/source-materials/`: raw upstream markdown, code, figures, assets,
-  and PDF pulled from the source projects.
+- `references/source-materials/jax-scaling-book/`: raw JAX Scaling Book source.
+- `docs/ultra-scale-playbook/`: docs-owned Ultra-Scale Playbook source,
+  build instructions, and Megatron-LM concept mapping.
 
 Read the relevant reference before giving a detailed explanation. For quick
 answers, `source-material.md` plus the matching focused reference is usually

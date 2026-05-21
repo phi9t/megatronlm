@@ -400,6 +400,41 @@ d-article hr {
     grid-column: text;
 }
 
+.megatron-companion {
+    grid-column: text;
+    border-left: 4px solid #76b900;
+    background: #f6f8f4;
+    padding: 1rem 1.1rem;
+    margin: 1.25rem 0 1.5rem 0;
+}
+
+.megatron-companion-row {
+    display: grid;
+    grid-template-columns: minmax(160px, 0.42fr) 1fr;
+    gap: 1rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.megatron-companion-row:last-child {
+    border-bottom: 0;
+}
+
+.megatron-companion-row strong {
+    color: #1f2937;
+}
+
+.megatron-companion code {
+    font-size: 0.86em;
+}
+
+@media (max-width: 767px) {
+    .megatron-companion-row {
+        grid-template-columns: 1fr;
+        gap: 0.25rem;
+    }
+}
+
 /* Memory visualization */
 #graph-all {
     min-width: 500px;

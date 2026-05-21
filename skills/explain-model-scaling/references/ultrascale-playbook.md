@@ -2,6 +2,12 @@
 
 Source: https://huggingface.co/spaces/nanotron/ultrascale-playbook
 
+Repo-local source and Megatron mapping:
+
+- `docs/ultra-scale-playbook/app/`
+- `docs/ultra-scale-playbook/index.md`
+- `docs/ultra-scale-playbook/megatron-mapping.md`
+
 These notes distill the GPU-cluster training mechanisms most useful for
 explaining Megatron-LM runs. The playbook's practical frame is: fit the step in
 memory, hit the intended global batch size, then optimize throughput by changing
