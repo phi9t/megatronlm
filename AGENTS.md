@@ -29,3 +29,8 @@ skill keyword — infer it from the artifact you read.
 ### Code Quality
 
 - After editing imports in any Python files, always run `uv run isort` on those files to fix import order before committing.
+
+### Runtime Artifacts
+
+- Never use `/tmp` for repo workflows, tests, launchers, caches, or generated artifacts.
+  Put transient and local runtime state under repo-local ignored paths such as `local/`.
