@@ -1,0 +1,7 @@
+[tasks.anchor-train]
+description = "Launch the local Megatron-LM anchor training run."
+run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python tools/run_anchor_training.py"
+
+[tasks.anchor-train-smoke]
+description = "Run a short foreground smoke check for the anchor training launcher."
+run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python tools/run_anchor_training.py --name mcore-anchor-smoke --output-dir local/anchor-training-smoke --train-iters 2 --foreground"
