@@ -9,3 +9,15 @@ run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python tools/run_anchor_tra
 [tasks.anchor-train-preflight]
 description = "Run environment probes plus a 2-iteration foreground anchor training preflight."
 run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python tools/run_anchor_training.py --preflight --name mcore-anchor-preflight --output-dir local/anchor-training-preflight --duration-mins 5 --train-iters 2 --foreground"
+
+[tasks.llama-anchor]
+description = "Launch the local Megatron-LM Llama anchor training run."
+run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python examples/llama/run_llama_anchor.py"
+
+[tasks.llama-anchor-smoke]
+description = "Run a short foreground smoke check for the Llama anchor training launcher."
+run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python examples/llama/run_llama_anchor.py --name mcore-llama-anchor-smoke --output-dir local/llama-anchor-smoke --train-iters 2 --foreground"
+
+[tasks.llama-anchor-preflight]
+description = "Run environment probes plus a 2-iteration foreground Llama anchor preflight."
+run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python examples/llama/run_llama_anchor.py --preflight --name mcore-llama-anchor-preflight --output-dir local/llama-anchor-preflight --duration-mins 5 --train-iters 2 --foreground"
