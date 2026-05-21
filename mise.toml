@@ -5,3 +5,7 @@ run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python tools/run_anchor_tra
 [tasks.anchor-train-smoke]
 description = "Run a short foreground smoke check for the anchor training launcher."
 run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python tools/run_anchor_training.py --name mcore-anchor-smoke --output-dir local/anchor-training-smoke --train-iters 2 --foreground"
+
+[tasks.anchor-train-preflight]
+description = "Run environment probes plus a 2-iteration foreground anchor training preflight."
+run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python tools/run_anchor_training.py --preflight --name mcore-anchor-preflight --output-dir local/anchor-training-preflight --duration-mins 5 --train-iters 2 --foreground"
