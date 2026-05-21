@@ -1,0 +1,4 @@
+interface:
+  display_name: "Explain Model Scaling"
+  short_description: "Explain LLM architecture and training mechanics."
+  default_prompt: "Explain this model or training run using scaling math and systems tradeoffs."
