@@ -33,6 +33,9 @@ document.addEventListener("DOMContentLoaded", () => {
     html.dark .note-box-title{color:#d1d5db}
     html.dark .note-box-content{color:#e5e7eb}
     html.dark .large-image-background{background:#242525}
+    html.dark .megatron-companion{background:#111;border-left-color:#76b900}
+    html.dark .megatron-companion-row{border-bottom-color:rgba(255,255,255,0.16)}
+    html.dark .megatron-companion-row strong{color:#f3f4f6}
     html.dark .boxed-image{background:#111;border-color:#262626;box-shadow:0 4px 6px rgba(0,0,0,.6)}
     html.dark #graph-all,html.dark #controls,html.dark .memory-block,html.dark .activation-memory,html.dark .gradient-memory{background:#111;border-color:#262626;box-shadow:0 4px 6px rgba(0,0,0,.6);color:#e5e7eb}
     html.dark label,html.dark .memory-title{color:#e5e7eb}

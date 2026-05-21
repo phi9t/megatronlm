@@ -32,6 +32,9 @@ npm run build
 // And commit the dist folder
 ```
 
+Megatron-LM repository note: keep `dist/` generated-only for this vendored
+copy. Build it locally with `npm run build`, but do not commit generated output.
+
 ## Loading HTML fragments:
 There are two way to load HTML fragments:
 1. Compile them into html during build time

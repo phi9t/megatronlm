@@ -1,0 +1,72 @@
+# Copyright (c) 2026, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Deploy Ultra-Scale Playbook Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - ultra-scale-playbook-pages
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ultra-scale-playbook-pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-publish:
+    if: github.repository == 'phi9t/megatronlm'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: docs/ultra-scale-playbook/app/package-lock.json
+
+      - name: Build Ultra-Scale Playbook
+        working-directory: docs/ultra-scale-playbook/app
+        run: |
+          npm ci
+          npm run build
+
+      - name: Publish gh-pages branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          rm -rf local/pages-publish
+          mkdir -p local/pages-publish
+          cp -R docs/ultra-scale-playbook/app/dist/. local/pages-publish/
+          touch local/pages-publish/.nojekyll
+
+          git -C local/pages-publish init
+          git -C local/pages-publish config user.name "github-actions[bot]"
+          git -C local/pages-publish config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C local/pages-publish checkout -B gh-pages
+          git -C local/pages-publish add .
+          git -C local/pages-publish commit -m "Deploy ultra-scale playbook"
+          git -C local/pages-publish remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git -C local/pages-publish push --force origin gh-pages

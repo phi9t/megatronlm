@@ -103,5 +103,6 @@ apidocs/index.rst
 :hidden:
 :caption: Resources
 
+ultra-scale-playbook/index
 advanced/index
 ```
