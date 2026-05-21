@@ -22,6 +22,7 @@ class AnchorRunConfig:
     image: str = "megatron-lm:smoke"
     duration_mins: int = 130
     train_iters: int = 500_000
+    preflight: bool = False
 
 
 @dataclass(frozen=True)
@@ -101,12 +102,62 @@ def build_training_command(config: AnchorRunConfig) -> str:
     return " ".join(shlex.quote(arg) for arg in args)
 
 
-def build_docker_command(
-    config: AnchorRunConfig, user: UserInfo, detach: bool
-) -> list[str]:
-    """Build the Docker command for the anchor run."""
+def build_preflight_command() -> str:
+    """Build environment checks that run before the preflight mini-train."""
 
-    shell_command = (
+    return (
+        "python - <<'PY'\n"
+        "import os\n"
+        "from pathlib import Path\n"
+        "\n"
+        "import torch\n"
+        "import transformer_engine\n"
+        "\n"
+        "assert os.environ['HOME'] == '/outputs/home'\n"
+        "assert os.environ['USER']\n"
+        "assert os.environ['LOGNAME']\n"
+        "assert os.environ['TORCHINDUCTOR_CACHE_DIR'] == '/outputs/cache/torchinductor'\n"
+        "assert os.environ['CUDA_DEVICE_MAX_CONNECTIONS'] == '1'\n"
+        "assert torch.cuda.is_available()\n"
+        "assert torch.cuda.device_count() >= 1\n"
+        "\n"
+        "for path in ('/outputs/home', '/outputs/cache/torchinductor'):\n"
+        "    Path(path).mkdir(parents=True, exist_ok=True)\n"
+        "    marker = Path(path) / 'preflight-write-check'\n"
+        "    marker.write_text('ok', encoding='utf-8')\n"
+        "    marker.unlink()\n"
+        "\n"
+        "te_version = getattr(transformer_engine, '__version__', 'unknown')\n"
+        "print(f'preflight: torch={torch.__version__} cuda_devices={torch.cuda.device_count()}')\n"
+        "print(f'preflight: transformer_engine={te_version}')\n"
+        "PY\n"
+        "cat > /outputs/work/preflight_dist.py <<'PY'\n"
+        "import torch\n"
+        "import torch.distributed as dist\n"
+        "\n"
+        "assert torch.cuda.is_available()\n"
+        "dist.init_process_group(backend='nccl')\n"
+        "rank = dist.get_rank()\n"
+        "device = rank % torch.cuda.device_count()\n"
+        "torch.cuda.set_device(device)\n"
+        "value = torch.ones(1, device='cuda')\n"
+        "dist.all_reduce(value)\n"
+        "assert value.item() == dist.get_world_size()\n"
+        "dist.destroy_process_group()\n"
+        "print('preflight: torch.distributed nccl ok')\n"
+        "PY\n"
+        "torchrun --nproc_per_node=1 /outputs/work/preflight_dist.py"
+    )
+
+
+def build_inner_shell_command(config: AnchorRunConfig) -> str:
+    """Build the shell command executed by Docker."""
+
+    commands = [build_training_command(config)]
+    if config.preflight:
+        commands.insert(0, build_preflight_command())
+
+    return (
         "set -euo pipefail; "
         "mkdir -p /outputs/work /outputs/home /outputs/cache/torchinductor; "
         "run_dir=$(mktemp -d /outputs/work/megatron-lm.XXXXXXXX); "
@@ -123,9 +174,16 @@ def build_docker_command(
         "--exclude='*.pyc' "
         "--exclude='*.so' "
         '-C /workspace -cf - . | tar -C "$run_dir" -xf -; '
-        'cd "$run_dir"; '
-        f"{build_training_command(config)}"
+        'cd "$run_dir"; ' + "; ".join(commands)
     )
+
+
+def build_docker_command(
+    config: AnchorRunConfig, user: UserInfo, detach: bool
+) -> list[str]:
+    """Build the Docker command for the anchor run."""
+
+    shell_command = build_inner_shell_command(config)
     command = [
         "docker",
         "run",
@@ -188,6 +246,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--duration-mins", type=int, default=130)
     parser.add_argument("--train-iters", type=int, default=500_000)
+    parser.add_argument("--preflight", action="store_true")
     parser.add_argument("--foreground", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
@@ -208,6 +267,7 @@ def main() -> None:
         image=args.image,
         duration_mins=args.duration_mins,
         train_iters=args.train_iters,
+        preflight=args.preflight,
     )
     user = UserInfo(
         uid=os.getuid(), gid=os.getgid(), name=os.environ.get("USER", "megatron")
