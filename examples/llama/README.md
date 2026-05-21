@@ -13,7 +13,7 @@ runtime pattern as the anchor training launcher:
 
 ## Quick Start
 
-Run the default Llama anchor training job:
+Run the small Llama anchor training job:
 
 ```bash
 mise run llama-anchor
@@ -65,38 +65,43 @@ The small anchor configuration uses mock data with Llama-style model choices:
 RoPE, RMSNorm, SwiGLU, grouped query attention, MCore GPT models, BF16, and
 TransformerEngine.
 
-## Advanced 8B FP8 Benchmark
+## Long 8B FP8 Run
 
-The original `train_llama3_8b_h100_fp8.sh` script remains available for larger
-manual benchmark runs. It targets a Llama-3 8B-style FP8 configuration and is
-not the default smoke path.
+The managed long run wraps the Llama-3 8B FP8 example in the same repo-local
+Docker pattern as the anchor run. It defaults to mock data, 8 local GPUs, and a
+235-minute exit duration.
 
-Set host paths:
-
-```bash
-export HOST_MEGATRON_LM_DIR="/path/to/your/host/megatron-lm"
-export HOST_CHECKPOINT_PATH="./checkpoints/llama3_8b_fp8"
-export HOST_TENSORBOARD_LOGS_PATH="./tensorboard_logs/llama3_8b_fp8"
-```
-
-Run with mock data:
+Run the foreground preflight first:
 
 ```bash
-PYTORCH_IMAGE="nvcr.io/nvidia/pytorch:25.03-py3"
-
-docker run --rm --gpus all --ipc=host --ulimit memlock=-1 \
-  -v "${HOST_MEGATRON_LM_DIR}:/workspace/megatron-lm" \
-  -v "${HOST_CHECKPOINT_PATH}:/workspace/checkpoints" \
-  -v "${HOST_TENSORBOARD_LOGS_PATH}:/workspace/tensorboard_logs" \
-  --workdir /workspace/megatron-lm \
-  "${PYTORCH_IMAGE}" \
-  bash examples/llama/train_llama3_8b_h100_fp8.sh \
-    /workspace/checkpoints \
-    /workspace/tensorboard_logs
+mise run llama3-8b-long-preflight
 ```
 
-For custom data, pass a tokenizer model and data prefix as the third and fourth
-arguments to `train_llama3_8b_h100_fp8.sh`.
+Launch the detached long run:
+
+```bash
+mise run llama3-8b-long
+```
+
+Preview the Docker command:
+
+```bash
+mise run llama3-8b-long-dry-run
+```
+
+The default outputs are written to `local/llama3-8b-long`. Checkpoints,
+TensorBoard logs, caches, and profiler output are kept under that directory.
+
+The long-run launcher can also run with real data:
+
+```bash
+uv run python examples/llama/run_llama3_8b_long.py \
+  --tokenizer-model /path/to/tokenizer \
+  --data-path /path/to/data_prefix
+```
+
+Use `--resume` to add `--load /outputs/checkpoints` when continuing from a
+checkpoint in the output directory.
 
 ## 8B FP8 Configuration
 
@@ -126,3 +131,6 @@ Key training parameters:
 - FP8 format: hybrid
 
 FP8 requires NVIDIA Hopper, Ada, or Blackwell GPUs.
+
+The original `train_llama3_8b_h100_fp8.sh` script remains available for manual
+benchmark runs, but the `mise` tasks above are the managed local path.

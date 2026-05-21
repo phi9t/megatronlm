@@ -21,3 +21,15 @@ run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python examples/llama/run_l
 [tasks.llama-anchor-preflight]
 description = "Run environment probes plus a 2-iteration foreground Llama anchor preflight."
 run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python examples/llama/run_llama_anchor.py --preflight --name mcore-llama-anchor-preflight --output-dir local/llama-anchor-preflight --duration-mins 5 --train-iters 2 --foreground"
+
+[tasks.llama3-8b-long]
+description = "Launch the long local Llama-3 8B FP8 mock-data training run."
+run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python examples/llama/run_llama3_8b_long.py"
+
+[tasks.llama3-8b-long-preflight]
+description = "Run Llama-3 8B FP8 environment probes in the foreground."
+run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python examples/llama/run_llama3_8b_long.py --preflight --preflight-only --name mcore-llama3-8b-long-preflight --output-dir local/llama3-8b-long-preflight --foreground"
+
+[tasks.llama3-8b-long-dry-run]
+description = "Print the long Llama-3 8B FP8 Docker command without launching it."
+run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python examples/llama/run_llama3_8b_long.py --dry-run"
