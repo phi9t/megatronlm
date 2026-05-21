@@ -1,0 +1,80 @@
+runtime:
+  image: megatron-lm:smoke
+  container_name: mcore-llama3-8b-long
+  output_dir: local/llama3-8b-long
+
+docker:
+  checkpoints_path: /outputs/checkpoints
+
+distributed:
+  nproc_per_node: 8
+  timeout_minutes: 60
+  min_cuda_devices: 8
+  min_compute_capability: [8, 9]
+
+model:
+  num_layers: 32
+  hidden_size: 4096
+  ffn_hidden_size: 14336
+  num_attention_heads: 32
+  num_query_groups: 8
+  kv_channels: 128
+  seq_length: 8192
+  max_position_embeddings: 8192
+
+training:
+  micro_batch_size: 1
+  global_batch_size: 128
+  train_samples: 1953125000
+  lr_decay_samples: 1949218748
+  lr_warmup_samples: 3906252
+  exit_duration_in_mins: 235
+  grad_reduce_in_bf16: true
+  cross_entropy_loss_fusion: true
+  calculate_per_token_loss: true
+  manual_gc: true
+  empty_unused_memory_level: 1
+
+optimizer:
+  lr: "0.00015"
+  min_lr: "0.00001"
+  decoupled_lr: "5.0e-4"
+  decoupled_min_lr: "4.5e-5"
+  lr_decay_style: cosine
+  weight_decay: "0.1"
+  clip_grad: "1.0"
+  adam_beta1: "0.9"
+  adam_beta2: "0.95"
+
+fp8:
+  enabled: true
+  format: hybrid
+  amax_history_len: 1024
+  amax_compute_algo: max
+  param_gather: true
+
+parallelism:
+  tensor_model_parallel_size: 1
+  pipeline_model_parallel_size: 1
+  context_parallel_size: 1
+  sequence_parallel: true
+  use_distributed_optimizer: true
+  overlap_grad_reduce: true
+  overlap_param_gather: true
+
+data:
+  mode: mock
+  vocab_size: 128256
+  split: 99,1,0
+  tiktoken_pattern: v2
+
+logging:
+  log_interval: 1
+  eval_iters: 32
+  eval_interval: 100
+  save_interval: 1000
+  log_throughput: true
+  profile: true
+  profile_step_start: 4
+  profile_step_end: 6
+  ckpt_format: torch_dist
