@@ -34,3 +34,7 @@ skill keyword — infer it from the artifact you read.
 
 - Never use `/tmp` for repo workflows, tests, launchers, caches, or generated artifacts.
   Put transient and local runtime state under repo-local ignored paths such as `local/`.
+- Never use absolute filesystem paths in docs, examples, tests, launchers, or source code.
+  Document and encode paths as repo-relative paths, container-internal mount paths, or values
+  supplied by the user/configuration. Do not call `os.path.abspath()` or `Path.resolve()` to
+  bake host-specific paths into generated commands, docs, configs, or committed code.
