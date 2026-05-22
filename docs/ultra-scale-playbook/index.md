@@ -69,7 +69,8 @@ To publish from the fork:
 Use the [Megatron-LM mapping](megatron-mapping.md) when reading the Playbook
 alongside this repository. It maps the Playbook's DP, ZeRO/FSDP, TP/SP, CP, PP,
 EP/MoE, recomputation, FP8, profiling, and batch-size concepts to Megatron
-flags, configs, docs, examples, and source paths.
+flags, configs, short code snippets, GitHub source links, examples, and source
+paths.
 
 ```{toctree}
 :maxdepth: 1
