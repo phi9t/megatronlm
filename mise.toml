@@ -46,6 +46,14 @@ run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python tools/verl_megatron.
 description = "Run the one-step 8-GPU verl Megatron-FSDP SFT smoke."
 run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python tools/verl_megatron.py preflight --smoke"
 
+[tasks.verl-megatron-production-validation]
+description = "Run bounded SFT and RL production validation for verl Megatron-FSDP on one 8-GPU B200 node."
+run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python tools/verl_megatron.py validate-production"
+
+[tasks.verl-megatron-production-validation-dry-run]
+description = "Print the bounded SFT and RL production validation commands without running them."
+run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python tools/verl_megatron.py validate-production --dry-run"
+
 [tasks.verl-megatron-dry-run]
 description = "Print the vendored verl + Megatron-Bridge setup and preflight commands without running them."
 run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python tools/verl_megatron.py setup --dry-run && UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python tools/verl_megatron.py preflight --dry-run"

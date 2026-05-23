@@ -100,3 +100,28 @@ checkpoint.save_contents=["model"]
 That avoids the optimizer-save path that is not needed for the preflight and
 keeps the validation focused on conversion, distributed initialization,
 training, and model checkpoint writing.
+
+## Production Validation
+
+Run the bounded SFT plus RL production validation on a single 8-GPU B200 node:
+
+```bash
+mise run verl-megatron-production-validation
+```
+
+For command review without launching training:
+
+```bash
+mise run verl-megatron-production-validation-dry-run
+```
+
+Each run writes a timestamped evidence directory under:
+
+```text
+local/verl-runs/production-validation/<timestamp>/evidence
+```
+
+The evidence includes `evidence.json`, `summary.md`, `sft_command.sh`,
+`rl_command.sh`, environment records, logs, checkpoint inventories, and pass/fail
+gates. The first production validation uses the base Qwen/Qwen2.5-Math-7B model
+for RL and verifies the SFT phase through its own checkpoint output.
