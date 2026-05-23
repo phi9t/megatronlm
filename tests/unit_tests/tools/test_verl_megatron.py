@@ -131,3 +131,19 @@ def test_production_data_prep_command_creates_sft_and_rl_data():
     assert "/workspace/local/verl-data/gsm8k_sft" in command
     assert "/workspace/local/verl-data/gsm8k" in command
     assert "/workspace/local/verl-data/math" in command
+
+
+def test_build_logged_inner_command_writes_exit_code_and_log():
+    tool = load_module()
+
+    command = tool.build_logged_inner_command(
+        "python3 -V",
+        log_path="/workspace/local/verl-runs/production-validation/run/logs/preflight.log",
+        exit_code_path="/workspace/local/verl-runs/production-validation/run/logs/preflight.exitcode",
+    )
+
+    assert "set +e" in command
+    assert "python3 -V" in command
+    assert "2>&1 | tee /workspace/local/verl-runs/production-validation/run/logs/preflight.log" in command
+    assert "echo ${PIPESTATUS[0]} > /workspace/local/verl-runs/production-validation/run/logs/preflight.exitcode" in command
+    assert "exit $(cat /workspace/local/verl-runs/production-validation/run/logs/preflight.exitcode)" in command

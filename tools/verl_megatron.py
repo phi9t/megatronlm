@@ -333,6 +333,18 @@ def format_command(command: list[str]) -> str:
     return " ".join(shlex.quote(part) for part in command)
 
 
+def build_logged_inner_command(inner_command: str, *, log_path: str, exit_code_path: str) -> str:
+    return textwrap.dedent(
+        f"""
+        mkdir -p {shlex.quote(str(Path(log_path).parent))}
+        set +e
+        {inner_command} 2>&1 | tee {shlex.quote(log_path)}
+        echo ${{PIPESTATUS[0]}} > {shlex.quote(exit_code_path)}
+        exit $(cat {shlex.quote(exit_code_path)})
+        """
+    ).strip()
+
+
 def run_command(command: list[str], *, cwd: Path, dry_run: bool = False) -> None:
     print(format_command(command))
     if dry_run:
