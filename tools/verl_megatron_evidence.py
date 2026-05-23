@@ -1,0 +1,115 @@
+from __future__ import annotations
+
+import json
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+from typing import Any
+
+FATAL_LOG_PATTERNS = (
+    "Traceback",
+    "RuntimeError",
+    "CUDA out of memory",
+    "NCCL error",
+    "AssertionError",
+    "KeyError",
+)
+
+
+@dataclass(frozen=True)
+class FatalLogMatch:
+    path: str
+    pattern: str
+    line: int
+
+
+@dataclass
+class GateResult:
+    name: str
+    passed: bool
+    detail: str
+
+
+@dataclass
+class ProductionEvidence:
+    run_dir: Path
+    status: str = "running"
+    gates: list[GateResult] = field(default_factory=list)
+    records: dict[str, Any] = field(default_factory=dict)
+
+    def add_gate(self, name: str, passed: bool, detail: str) -> None:
+        self.gates.append(GateResult(name=name, passed=passed, detail=detail))
+        if not passed:
+            self.status = "fail"
+
+    def record(self, key: str, value: Any) -> None:
+        self.records[key] = value
+
+    def finish(self) -> None:
+        if self.status != "fail":
+            self.status = "pass" if all(gate.passed for gate in self.gates) else "fail"
+
+
+def scan_log_for_fatal_patterns(path: Path) -> list[FatalLogMatch]:
+    matches: list[FatalLogMatch] = []
+    if not path.exists():
+        return matches
+    for line_number, line in enumerate(
+        path.read_text(encoding="utf-8", errors="replace").splitlines(),
+        start=1,
+    ):
+        for pattern in FATAL_LOG_PATTERNS:
+            if pattern in line:
+                matches.append(
+                    FatalLogMatch(path=str(path), pattern=pattern, line=line_number)
+                )
+    return matches
+
+
+def inventory_paths(root: Path) -> list[dict[str, Any]]:
+    if not root.exists():
+        return []
+    return [
+        {"path": str(path), "size_bytes": path.stat().st_size}
+        for path in sorted(root.rglob("*"))
+        if path.is_file()
+    ]
+
+
+def write_evidence(evidence: ProductionEvidence) -> None:
+    evidence.finish()
+    evidence_dir = evidence.run_dir / "evidence"
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "status": evidence.status,
+        "run_dir": str(evidence.run_dir),
+        "gates": [asdict(gate) for gate in evidence.gates],
+        "records": evidence.records,
+    }
+    (evidence_dir / "evidence.json").write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    (evidence_dir / "summary.md").write_text(
+        render_summary(evidence),
+        encoding="utf-8",
+    )
+
+
+def render_summary(evidence: ProductionEvidence) -> str:
+    lines = [
+        "# verl Megatron Production Validation",
+        "",
+        f"Status: {evidence.status.upper()}",
+        f"Run directory: `{evidence.run_dir}`",
+        "",
+        "## Gates",
+        "",
+    ]
+    for gate in evidence.gates:
+        status = "PASS" if gate.passed else "FAIL"
+        lines.append(f"- {status}: {gate.name} - {gate.detail}")
+    lines.extend(["", "## Records", ""])
+    for key in sorted(evidence.records):
+        lines.append(f"- `{key}`: `{evidence.records[key]}`")
+    lines.append("")
+    return "\n".join(lines)
