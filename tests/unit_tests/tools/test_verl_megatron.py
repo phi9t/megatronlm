@@ -67,3 +67,58 @@ def test_image_build_command_uses_repo_owned_dockerfile():
         "tools/verl_megatron/Dockerfile",
         ".",
     ]
+
+
+def test_production_sft_command_uses_bounded_megatron_fsdp_run():
+    tool = load_module()
+
+    command = tool.build_production_sft_command(
+        train_path="/workspace/local/verl-data/gsm8k_sft/train.parquet",
+        val_path="/workspace/local/verl-data/gsm8k_sft/test.parquet",
+        output_dir="/workspace/local/verl-runs/production-validation/run/sft",
+        total_steps=2,
+    )
+
+    assert "torchrun" in command
+    assert "--nproc_per_node=8" in command
+    assert "verl.trainer.sft_trainer" in command
+    assert "engine=megatron" in command
+    assert "engine.use_megatron_fsdp=True" in command
+    assert "engine.tensor_model_parallel_size=4" in command
+    assert "trainer.total_training_steps=2" in command
+    assert "checkpoint.save_contents=" in command
+
+
+def test_production_rl_command_uses_upstream_grpo_megatron_fsdp_shape():
+    tool = load_module()
+
+    command = tool.build_production_rl_command(
+        gsm8k_train_path="/workspace/local/verl-data/gsm8k/train.parquet",
+        gsm8k_test_path="/workspace/local/verl-data/gsm8k/test.parquet",
+        math_train_path="/workspace/local/verl-data/math/train.parquet",
+        math_test_path="/workspace/local/verl-data/math/test.parquet",
+        output_dir="/workspace/local/verl-runs/production-validation/run/rl",
+        total_steps=2,
+    )
+
+    assert "python3 -m verl.trainer.main_ppo" in command
+    assert "--config-name=ppo_megatron_trainer.yaml" in command
+    assert "actor_rollout_ref.actor.megatron.use_megatron_fsdp=True" in command
+    assert "actor_rollout_ref.ref.megatron.use_megatron_fsdp=True" in command
+    assert "actor_rollout_ref.actor.megatron.tensor_model_parallel_size=4" in command
+    assert "trainer.n_gpus_per_node=8" in command
+    assert "trainer.total_training_steps=2" in command
+    assert "trainer.default_local_dir=/workspace/local/verl-runs/production-validation/run/rl" in command
+
+
+def test_production_data_prep_command_creates_sft_and_rl_data():
+    tool = load_module()
+
+    command = tool.build_production_data_prep_command()
+
+    assert "gsm8k_multiturn_sft.py" in command
+    assert "gsm8k.py" in command
+    assert "math_dataset.py" in command
+    assert "/workspace/local/verl-data/gsm8k_sft" in command
+    assert "/workspace/local/verl-data/gsm8k" in command
+    assert "/workspace/local/verl-data/math" in command

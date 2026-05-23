@@ -201,6 +201,134 @@ def build_sft_smoke_command() -> str:
     return " ".join(shlex.quote(arg) for arg in args)
 
 
+def build_production_data_prep_command() -> str:
+    return " && ".join(
+        [
+            "python3 examples/data_preprocess/gsm8k_multiturn_sft.py --local_save_dir /workspace/local/verl-data/gsm8k_sft",
+            "python3 examples/data_preprocess/gsm8k.py --local_save_dir /workspace/local/verl-data/gsm8k",
+            "python3 examples/data_preprocess/math_dataset.py --local_save_dir /workspace/local/verl-data/math",
+        ]
+    )
+
+
+def build_production_sft_command(*, train_path: str, val_path: str, output_dir: str, total_steps: int) -> str:
+    args = [
+        "torchrun",
+        "--standalone",
+        "--nnodes=1",
+        "--nproc_per_node=8",
+        "-m",
+        "verl.trainer.sft_trainer",
+        f"data.train_files={train_path}",
+        f"data.val_files={val_path}",
+        "data.messages_key=messages",
+        "data.train_batch_size=8",
+        "data.use_dynamic_bsz=True",
+        "data.max_token_len_per_gpu=1024",
+        "data.pad_mode=no_padding",
+        "data.truncation=error",
+        "model=hf_model",
+        "model.path=Qwen/Qwen2.5-Math-7B",
+        "model.trust_remote_code=True",
+        "model.use_remove_padding=True",
+        "engine=megatron",
+        "engine.tensor_model_parallel_size=4",
+        "engine.pipeline_model_parallel_size=1",
+        "engine.expert_model_parallel_size=1",
+        "engine.use_mbridge=True",
+        "engine.vanilla_mbridge=False",
+        "engine.use_megatron_fsdp=True",
+        "+engine.override_transformer_config.gradient_accumulation_fusion=False",
+        "optim=megatron",
+        "optim.lr=1e-5",
+        "optim.lr_warmup_steps_ratio=0.2",
+        "optim.weight_decay=0.1",
+        "optim.betas=[0.9,0.95]",
+        "optim.clip_grad=1.0",
+        "optim.lr_warmup_init=0",
+        "optim.lr_decay_style=cosine",
+        "optim.min_lr=1e-6",
+        f"trainer.default_local_dir={output_dir}",
+        "trainer.total_epochs=1",
+        f"trainer.total_training_steps={total_steps}",
+        "trainer.project_name=verl_megatron_production_validation",
+        "trainer.experiment_name=sft_b200_tp4",
+        "trainer.logger=['console']",
+        'checkpoint.save_contents=["model"]',
+    ]
+    return " ".join(shlex.quote(arg) for arg in args)
+
+
+def build_production_rl_command(
+    *,
+    gsm8k_train_path: str,
+    gsm8k_test_path: str,
+    math_train_path: str,
+    math_test_path: str,
+    output_dir: str,
+    total_steps: int,
+) -> str:
+    train_files = f"['{gsm8k_train_path}','{math_train_path}']"
+    test_files = f"['{gsm8k_test_path}','{math_test_path}']"
+    args = [
+        "python3",
+        "-m",
+        "verl.trainer.main_ppo",
+        "--config-path=config",
+        "--config-name=ppo_megatron_trainer.yaml",
+        f"data.train_files={train_files}",
+        f"data.val_files={test_files}",
+        "data.return_raw_chat=True",
+        "data.train_batch_size=32",
+        "data.max_prompt_length=512",
+        "data.max_response_length=512",
+        "data.filter_overlong_prompts=True",
+        "data.truncation=error",
+        "actor_rollout_ref.model.path=Qwen/Qwen2.5-Math-7B",
+        "actor_rollout_ref.model.use_fused_kernels=False",
+        "actor_rollout_ref.actor.optim.lr=1e-6",
+        "actor_rollout_ref.actor.ppo_mini_batch_size=16",
+        "actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=2",
+        "actor_rollout_ref.actor.use_kl_loss=True",
+        "actor_rollout_ref.actor.kl_loss_coef=0.001",
+        "actor_rollout_ref.actor.kl_loss_type=low_var_kl",
+        "actor_rollout_ref.actor.entropy_coeff=0",
+        "actor_rollout_ref.actor.megatron.pipeline_model_parallel_size=1",
+        "actor_rollout_ref.actor.megatron.tensor_model_parallel_size=4",
+        "actor_rollout_ref.actor.megatron.use_mbridge=True",
+        "actor_rollout_ref.actor.megatron.vanilla_mbridge=False",
+        "actor_rollout_ref.actor.megatron.use_megatron_fsdp=True",
+        "++actor_rollout_ref.actor.megatron.override_transformer_config.gradient_accumulation_fusion=False",
+        "actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=2",
+        "actor_rollout_ref.rollout.tensor_model_parallel_size=4",
+        "actor_rollout_ref.rollout.name=vllm",
+        "actor_rollout_ref.rollout.mode=async",
+        "actor_rollout_ref.rollout.gpu_memory_utilization=0.4",
+        "actor_rollout_ref.rollout.n=2",
+        "actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=2",
+        "actor_rollout_ref.ref.megatron.pipeline_model_parallel_size=1",
+        "actor_rollout_ref.ref.megatron.tensor_model_parallel_size=4",
+        "actor_rollout_ref.ref.megatron.use_mbridge=True",
+        "actor_rollout_ref.ref.megatron.vanilla_mbridge=False",
+        "actor_rollout_ref.ref.megatron.use_megatron_fsdp=True",
+        "++actor_rollout_ref.ref.megatron.override_transformer_config.gradient_accumulation_fusion=False",
+        "algorithm.adv_estimator=grpo",
+        "algorithm.use_kl_in_reward=False",
+        "trainer.critic_warmup=0",
+        "trainer.logger=['console']",
+        "trainer.project_name=verl_megatron_production_validation",
+        "trainer.experiment_name=grpo_b200_tp4",
+        "trainer.n_gpus_per_node=8",
+        "trainer.nnodes=1",
+        "trainer.save_freq=1",
+        "trainer.test_freq=1",
+        "trainer.total_epochs=1",
+        f"trainer.total_training_steps={total_steps}",
+        f"trainer.default_local_dir={output_dir}",
+    ]
+    return " ".join(shlex.quote(arg) for arg in args)
+
+
 def format_command(command: list[str]) -> str:
     return " ".join(shlex.quote(part) for part in command)
 
