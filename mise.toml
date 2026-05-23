@@ -33,3 +33,19 @@ run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python examples/llama/run_l
 [tasks.llama3-8b-long-dry-run]
 description = "Print the long YAML-configured Llama-3 8B FP8 Docker command."
 run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python examples/llama/run_llama.py --config examples/llama/configs/llama3_8b_long.yaml --dry-run"
+
+[tasks.verl-megatron-setup]
+description = "Initialize the vendored verl + Megatron-Bridge workflow, patch Bridge, build the image, and prepare SFT data."
+run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python tools/verl_megatron.py setup"
+
+[tasks.verl-megatron-preflight]
+description = "Run a quick import/GPU preflight for the vendored verl + Megatron-Bridge workflow."
+run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python tools/verl_megatron.py preflight"
+
+[tasks.verl-megatron-smoke]
+description = "Run the one-step 8-GPU verl Megatron-FSDP SFT smoke."
+run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python tools/verl_megatron.py preflight --smoke"
+
+[tasks.verl-megatron-dry-run]
+description = "Print the vendored verl + Megatron-Bridge setup and preflight commands without running them."
+run = "UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python tools/verl_megatron.py setup --dry-run && UV_PROJECT_ENVIRONMENT=local/uv-anchor uv run python tools/verl_megatron.py preflight --dry-run"

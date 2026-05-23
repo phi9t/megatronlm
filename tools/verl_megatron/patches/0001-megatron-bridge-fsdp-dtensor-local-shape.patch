@@ -1,0 +1,84 @@
+diff --git a/src/megatron/bridge/models/conversion/param_mapping.py b/src/megatron/bridge/models/conversion/param_mapping.py
+index 0aca8bd5..4b253ea4 100644
+--- a/src/megatron/bridge/models/conversion/param_mapping.py
++++ b/src/megatron/bridge/models/conversion/param_mapping.py
+@@ -53,6 +53,11 @@ def _module_uses_fsdp(megatron_module: nn.Module) -> bool:
+     )
+ 
+ 
++def _target_param_local_shape(target_param: Union[torch.Tensor, DTensor]) -> torch.Size:
++    """Return the local Megatron parameter shape used for TP collectives."""
++    return target_param.orig_param.shape if isinstance(target_param, DTensor) else target_param.shape
++
++
+ class MegatronParamMapping(ABC, Generic[WeightType]):
+     """
+     Abstract base class for weight conversion between Megatron and external formats.
+@@ -904,8 +909,9 @@ class ColumnParallelMapping(MegatronParamMapping[torch.Tensor]):
+                     )
+                 hf_weights = hf_weights.to(target_param.dtype)
+ 
++            target_shape = _target_param_local_shape(target_param)
+             actual_dim0_size = hf_weights.shape[0]
+-            expect_dim0_size = target_param.shape[0] * self.tp_size
++            expect_dim0_size = target_shape[0] * self.tp_size
+             if actual_dim0_size != expect_dim0_size:
+                 assert self.megatron_param in {"embedding.word_embeddings.weight", "output_layer.weight"}, (
+                     f"{hf_weights.shape=} {target_param.shape=} {self.tp_size=} {self.megatron_param=} {self.hf_param=}"
+@@ -922,10 +928,7 @@ class ColumnParallelMapping(MegatronParamMapping[torch.Tensor]):
+         else:
+             splits = None
+ 
+-        if isinstance(target_param, DTensor):
+-            output_shape = target_param.orig_param.shape
+-        else:
+-            output_shape = target_param.shape
++        output_shape = _target_param_local_shape(target_param)
+         # Scatter to all ranks. Each rank gets its sharded shape from its module.
+         return self.scatter_to_tp_ranks(
+             splits,
+diff --git a/tests/unit_tests/models/test_param_mapping.py b/tests/unit_tests/models/test_param_mapping.py
+index 6050ea28..8219d383 100644
+--- a/tests/unit_tests/models/test_param_mapping.py
++++ b/tests/unit_tests/models/test_param_mapping.py
+@@ -206,6 +206,40 @@ class TestColumnParallelMapping:
+             assert "hf.weight" in result
+             assert torch.equal(result["hf.weight"], full_weight)
+ 
++    def test_hf_to_megatron_uses_orig_param_shape_for_fsdp_dtensor(
++        self, mock_distributed_env, transformer_config, monkeypatch
++    ):
++        from megatron.bridge.models.conversion import param_mapping as param_mapping_module
++
++        _, mock_dist = mock_distributed_env(tp_size=2, tp_rank=0)
++        mapping = ColumnParallelMapping("embedding.word_embeddings.weight", "model.embed_tokens.weight")
++        megatron_module = MockModule(transformer_config, weight_shape=(1, 1))
++        hf_weight = torch.randn(32, 16)
++
++        class FakeDTensor:
++            def __init__(self):
++                self.shape = torch.Size((32, 16))
++                self.orig_param = torch.empty(16, 16)
++                self.dtype = torch.float32
++                self.device = torch.device("cpu")
++
++        target_param = FakeDTensor()
++        monkeypatch.setattr(param_mapping_module, "DTensor", FakeDTensor)
++        monkeypatch.setattr(
++            param_mapping_module,
++            "get_module_and_param_from_name",
++            lambda module, name: (module, target_param),
++        )
++
++        def mock_scatter(output, scatter_list, src, group):
++            assert scatter_list[0].shape == torch.Size((16, 16))
++            output.copy_(scatter_list[0])
++
++        mock_dist.scatter.side_effect = mock_scatter
++        megatron_weight = mapping.hf_to_megatron(hf_weight, megatron_module)
++
++        assert megatron_weight.shape == torch.Size((16, 16))
++
+ 
+ class TestRowParallelMapping:
+     @pytest.mark.parametrize("tp_rank", [0, 1])

@@ -1,0 +1,6 @@
+[submodule "third_party/verl"]
+	path = third_party/verl
+	url = https://github.com/volcengine/verl.git
+[submodule "third_party/Megatron-Bridge"]
+	path = third_party/Megatron-Bridge
+	url = https://github.com/NVIDIA-NeMo/Megatron-Bridge.git
