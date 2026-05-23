@@ -122,6 +122,7 @@ local/verl-runs/production-validation/<timestamp>/evidence
 ```
 
 The evidence includes `evidence.json`, `summary.md`, `sft_command.sh`,
-`rl_command.sh`, environment records, logs, checkpoint inventories, and pass/fail
-gates. The first production validation uses the base Qwen/Qwen2.5-Math-7B model
-for RL and verifies the SFT phase through its own checkpoint output.
+`rl_command.sh`, command records, phase log paths, checkpoint inventories,
+fatal-log scan results, and pass/fail gates. The first production validation
+uses the base Qwen/Qwen2.5-Math-7B model for RL and verifies the SFT phase
+through its own checkpoint output.
