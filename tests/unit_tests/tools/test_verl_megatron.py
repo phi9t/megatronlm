@@ -166,3 +166,27 @@ def test_build_logged_inner_command_groups_compound_commands(tmp_path):
     assert result.returncode != 0
     assert log_path.read_text() == "firstsecond"
     assert exit_code_path.read_text().strip() == "1"
+
+
+def test_parser_accepts_validate_production_subcommand():
+    tool = load_module()
+
+    args = tool.build_parser().parse_args(["validate-production", "--dry-run", "--total-steps", "2"])
+
+    assert args.command == "validate-production"
+    assert args.dry_run is True
+    assert args.total_steps == 2
+
+
+def test_validate_production_dry_run_prints_sft_and_rl_commands(capsys):
+    tool = load_module()
+
+    exit_code = tool.main(["validate-production", "--dry-run", "--run-id", "unit-test", "--total-steps", "2"])
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert "production-validation/unit-test" in output
+    assert "verl.trainer.sft_trainer" in output
+    assert "verl.trainer.main_ppo" in output
+    assert "evidence/sft_command.sh" in output
+    assert "evidence/rl_command.sh" in output

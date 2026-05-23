@@ -4,12 +4,15 @@
 from __future__ import annotations
 
 import argparse
+import datetime as dt
+import importlib.util
 import shlex
 import subprocess
 import sys
 import textwrap
 from dataclasses import dataclass
 from pathlib import Path
+from types import ModuleType
 
 VERL_COMMIT = "7dc39fec1c37da4098b50e68840e78906b69f16a"
 MEGATRON_BRIDGE_COMMIT = "94dc04baf65157463181eef0c19549d5a6e4ccec"
@@ -49,6 +52,31 @@ class VerLMegatronConfig:
 
 def repo_root() -> Path:
     return Path(__file__).parent.parent
+
+
+def load_evidence_helpers() -> ModuleType:
+    module_path = Path(__file__).parent / "verl_megatron_evidence.py"
+    spec = importlib.util.spec_from_file_location("verl_megatron_evidence", module_path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+evidence_helpers = load_evidence_helpers()
+
+
+def default_run_id() -> str:
+    return dt.datetime.now(dt.UTC).strftime("%Y%m%dT%H%M%SZ")
+
+
+def workspace_run_dir(run_id: str) -> str:
+    return f"/workspace/local/verl-runs/production-validation/{run_id}"
+
+
+def host_run_dir(config: VerLMegatronConfig, run_id: str) -> Path:
+    return config.repo_root / "local/verl-runs/production-validation" / run_id
 
 
 def build_pythonpath() -> str:
@@ -475,6 +503,89 @@ def run_preflight(args: argparse.Namespace) -> None:
     run_command(build_docker_run_command(config, command), cwd=config.repo_root, dry_run=config.dry_run)
 
 
+def run_validate_production(args: argparse.Namespace) -> None:
+    run_id = args.run_id or default_run_id()
+    config = VerLMegatronConfig(repo_root=repo_root(), image=args.image, min_gpus=8, dry_run=args.dry_run)
+    run_root = host_run_dir(config, run_id)
+    workspace_root = workspace_run_dir(run_id)
+    evidence = evidence_helpers.ProductionEvidence(run_dir=run_root)
+    evidence.record("run_id", run_id)
+    evidence.record("workspace_run_dir", workspace_root)
+    evidence.record("rl_model_source", "base_model")
+
+    verify_pins(config)
+    evidence.add_gate("submodule-pins", True, "Expected submodule commits match")
+
+    if not config.dry_run:
+        state = patch_state(config)
+        evidence.add_gate("bridge-patch", state == "applied", f"Bridge patch state: {state}")
+        if state != "applied":
+            evidence_helpers.write_evidence(evidence)
+            raise SystemExit("Megatron-Bridge patch is not applied; run setup first")
+    else:
+        print("check Megatron-Bridge compatibility patch is applied")
+        evidence.add_gate("bridge-patch", True, "Dry-run assumes setup applies the Bridge patch")
+
+    require_image(config)
+    evidence.add_gate("docker-image", True, f"Docker image available: {config.image}")
+
+    preflight_command = build_import_preflight_command(8)
+    data_command = build_production_data_prep_command()
+    sft_command = build_production_sft_command(
+        train_path="/workspace/local/verl-data/gsm8k_sft/train.parquet",
+        val_path="/workspace/local/verl-data/gsm8k_sft/test.parquet",
+        output_dir=f"{workspace_root}/sft",
+        total_steps=args.total_steps,
+    )
+    rl_command = build_production_rl_command(
+        gsm8k_train_path="/workspace/local/verl-data/gsm8k/train.parquet",
+        gsm8k_test_path="/workspace/local/verl-data/gsm8k/test.parquet",
+        math_train_path="/workspace/local/verl-data/math/train.parquet",
+        math_test_path="/workspace/local/verl-data/math/test.parquet",
+        output_dir=f"{workspace_root}/rl",
+        total_steps=args.total_steps,
+    )
+
+    evidence_dir = run_root / "evidence"
+    evidence.record("sft_command", sft_command)
+    evidence.record("rl_command", rl_command)
+
+    if config.dry_run:
+        print("container-preflight command")
+        print(preflight_command)
+        print("data command")
+        print(data_command)
+        print(f"write {evidence_dir / 'sft_command.sh'}")
+        print(sft_command)
+        print(f"write {evidence_dir / 'rl_command.sh'}")
+        print(rl_command)
+        print(f"Evidence would be written to {evidence_dir}")
+        return
+
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+    (evidence_dir / "sft_command.sh").write_text(sft_command + "\n", encoding="utf-8")
+    (evidence_dir / "rl_command.sh").write_text(rl_command + "\n", encoding="utf-8")
+
+    phases = [
+        ("container-preflight", preflight_command),
+        ("data", data_command),
+        ("sft", sft_command),
+        ("rl", rl_command),
+    ]
+    for phase, command in phases:
+        logged = build_logged_inner_command(
+            command,
+            log_path=f"{workspace_root}/logs/{phase}.log",
+            exit_code_path=f"{workspace_root}/logs/{phase}.exitcode",
+        )
+        run_command(build_docker_run_command(config, logged), cwd=config.repo_root, dry_run=config.dry_run)
+        evidence.add_gate(f"{phase}-exit-code", True, f"{phase} command completed")
+
+    evidence.add_gate("evidence-written", True, "Evidence files written")
+    evidence_helpers.write_evidence(evidence)
+    print(f"Evidence written to {run_root / 'evidence'}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -494,6 +605,25 @@ def build_parser() -> argparse.ArgumentParser:
     preflight.add_argument("--smoke", action="store_true", help="Run the one-step 8-GPU Megatron-FSDP SFT smoke.")
     preflight.add_argument("--dry-run", action="store_true")
     preflight.set_defaults(func=run_preflight)
+
+    validate = subparsers.add_parser(
+        "validate-production",
+        help="Run bounded SFT and RL production validation with evidence capture.",
+    )
+    validate.add_argument("--image", default=DEFAULT_IMAGE)
+    validate.add_argument(
+        "--run-id",
+        default=None,
+        help="Run directory name under local/verl-runs/production-validation.",
+    )
+    validate.add_argument(
+        "--total-steps",
+        type=int,
+        default=2,
+        help="Bounded step count for SFT and RL validation phases.",
+    )
+    validate.add_argument("--dry-run", action="store_true")
+    validate.set_defaults(func=run_validate_production)
     return parser
 
 
