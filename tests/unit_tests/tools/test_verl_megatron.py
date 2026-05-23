@@ -1,4 +1,5 @@
 import importlib.util
+import subprocess
 import sys
 from pathlib import Path
 
@@ -144,6 +145,24 @@ def test_build_logged_inner_command_writes_exit_code_and_log():
 
     assert "set +e" in command
     assert "python3 -V" in command
+    assert "{\n  python3 -V\n}" in command
     assert "2>&1 | tee /workspace/local/verl-runs/production-validation/run/logs/preflight.log" in command
     assert "echo ${PIPESTATUS[0]} > /workspace/local/verl-runs/production-validation/run/logs/preflight.exitcode" in command
     assert "exit $(cat /workspace/local/verl-runs/production-validation/run/logs/preflight.exitcode)" in command
+
+
+def test_build_logged_inner_command_groups_compound_commands(tmp_path):
+    tool = load_module()
+    log_path = tmp_path / "compound.log"
+    exit_code_path = tmp_path / "compound.exitcode"
+
+    command = tool.build_logged_inner_command(
+        "printf first && printf second && false",
+        log_path=str(log_path),
+        exit_code_path=str(exit_code_path),
+    )
+    result = subprocess.run(["bash", "-lc", command], text=True, capture_output=True, check=False)
+
+    assert result.returncode != 0
+    assert log_path.read_text() == "firstsecond"
+    assert exit_code_path.read_text().strip() == "1"

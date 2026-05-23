@@ -334,11 +334,14 @@ def format_command(command: list[str]) -> str:
 
 
 def build_logged_inner_command(inner_command: str, *, log_path: str, exit_code_path: str) -> str:
+    grouped_command = textwrap.indent(inner_command, "  ")
     return textwrap.dedent(
         f"""
         mkdir -p {shlex.quote(str(Path(log_path).parent))}
         set +e
-        {inner_command} 2>&1 | tee {shlex.quote(log_path)}
+        {{
+        {grouped_command}
+        }} 2>&1 | tee {shlex.quote(log_path)}
         echo ${{PIPESTATUS[0]}} > {shlex.quote(exit_code_path)}
         exit $(cat {shlex.quote(exit_code_path)})
         """
