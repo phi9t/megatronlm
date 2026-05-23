@@ -74,3 +74,31 @@ def test_checkpoint_inventory_fails_when_empty(tmp_path):
     evidence = load_module()
 
     assert evidence.has_checkpoint_content(tmp_path) is False
+
+
+def test_checkpoint_inventory_ignores_tracker_only_file(tmp_path):
+    evidence = load_module()
+    ckpt = tmp_path / "global_step_2"
+    ckpt.mkdir()
+    (ckpt / "latest_checkpointed_iteration.txt").write_text("2", encoding="utf-8")
+
+    assert evidence.has_checkpoint_content(tmp_path) is False
+
+
+def test_rl_update_step_detects_training_global_step_metric(tmp_path):
+    evidence = load_module()
+    log_path = tmp_path / "rl.log"
+    log_path.write_text(
+        "initializing\nstep:1 - training/global_step:1 - actor/loss:0.1\n",
+        encoding="utf-8",
+    )
+
+    assert evidence.has_rl_update_step(log_path) is True
+
+
+def test_rl_update_step_fails_without_training_global_step_metric(tmp_path):
+    evidence = load_module()
+    log_path = tmp_path / "rl.log"
+    log_path.write_text("initializing\nTraining Progress: 1/2\n", encoding="utf-8")
+
+    assert evidence.has_rl_update_step(log_path) is False

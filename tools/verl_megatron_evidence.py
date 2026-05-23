@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,11 @@ FATAL_LOG_PATTERNS = (
     "NCCL error",
     "AssertionError",
     "KeyError",
+)
+CHECKPOINT_CONTENT_NAMES = {"distcp_metadata", "metadata.json", ".metadata"}
+CHECKPOINT_CONTENT_SUFFIXES = {".distcp", ".pt"}
+RL_UPDATE_STEP_PATTERN = re.compile(
+    r"""["']?training/global_step["']?\s*[:=]\s*([0-9]+)"""
 )
 
 
@@ -79,13 +85,21 @@ def has_checkpoint_content(root: Path) -> bool:
     if not root.exists():
         return False
     for path in root.rglob("*"):
-        if path.is_file() and path.name in {
-            "distcp_metadata",
-            "metadata.json",
-            "latest_checkpointed_iteration.txt",
-        }:
+        if path.is_file() and path.name in CHECKPOINT_CONTENT_NAMES:
             return True
-    return any(path.is_file() for path in root.rglob("*.pt"))
+        if path.is_file() and path.suffix in CHECKPOINT_CONTENT_SUFFIXES:
+            return True
+    return False
+
+
+def has_rl_update_step(log_path: Path) -> bool:
+    if not log_path.exists():
+        return False
+    for line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
+        match = RL_UPDATE_STEP_PATTERN.search(line)
+        if match and int(match.group(1)) > 0:
+            return True
+    return False
 
 
 def write_evidence(evidence: ProductionEvidence) -> None:

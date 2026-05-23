@@ -629,10 +629,12 @@ def run_validate_production(args: argparse.Namespace) -> None:
             evidence_helpers.has_checkpoint_content(run_root / "sft"),
             f"{len(sft_inventory)} files under SFT output",
         )
+        rl_log_path = run_root / "logs" / "rl.log"
+        has_rl_update_step = evidence_helpers.has_rl_update_step(rl_log_path)
         evidence.add_gate(
             "rl-step-evidence",
-            bool(list((run_root / "logs").glob("rl.log"))),
-            "RL log exists; metric parsing is recorded in the log artifact",
+            has_rl_update_step,
+            f"training/global_step metric found in {rl_log_path.name}: {has_rl_update_step}",
         )
         fatal_matches = []
         for log_path in sorted((run_root / "logs").glob("*.log")):
