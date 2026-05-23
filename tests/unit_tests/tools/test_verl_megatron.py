@@ -1,7 +1,10 @@
 import importlib.util
+import json
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 
 def load_module():
@@ -190,3 +193,28 @@ def test_validate_production_dry_run_prints_sft_and_rl_commands(capsys):
     assert "verl.trainer.main_ppo" in output
     assert "evidence/sft_command.sh" in output
     assert "evidence/rl_command.sh" in output
+
+
+def test_validate_production_writes_evidence_on_phase_failure(tmp_path, monkeypatch):
+    tool = load_module()
+
+    monkeypatch.setattr(tool, "repo_root", lambda: tmp_path)
+    monkeypatch.setattr(tool, "verify_pins", lambda config: None)
+    monkeypatch.setattr(tool, "patch_state", lambda config: "applied")
+    monkeypatch.setattr(tool, "require_image", lambda config: None)
+
+    def fail_run_command(command, *, cwd, dry_run=False):
+        raise subprocess.CalledProcessError(23, command)
+
+    monkeypatch.setattr(tool, "run_command", fail_run_command)
+
+    with pytest.raises(SystemExit) as exc_info:
+        tool.main(["validate-production", "--run-id", "phase-failure", "--total-steps", "2"])
+
+    assert exc_info.value.code == 23
+    evidence_path = tmp_path / "local/verl-runs/production-validation/phase-failure/evidence/evidence.json"
+    evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    gate = next(gate for gate in evidence["gates"] if gate["name"] == "container-preflight-exit-code")
+    assert evidence["status"] == "fail"
+    assert gate["passed"] is False
+    assert "exit code 23" in gate["detail"]

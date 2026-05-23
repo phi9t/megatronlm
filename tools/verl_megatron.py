@@ -578,7 +578,16 @@ def run_validate_production(args: argparse.Namespace) -> None:
             log_path=f"{workspace_root}/logs/{phase}.log",
             exit_code_path=f"{workspace_root}/logs/{phase}.exitcode",
         )
-        run_command(build_docker_run_command(config, logged), cwd=config.repo_root, dry_run=config.dry_run)
+        try:
+            run_command(build_docker_run_command(config, logged), cwd=config.repo_root, dry_run=config.dry_run)
+        except subprocess.CalledProcessError as exc:
+            evidence.add_gate(
+                f"{phase}-exit-code",
+                False,
+                f"{phase} command failed with exit code {exc.returncode}",
+            )
+            evidence_helpers.write_evidence(evidence)
+            raise SystemExit(exc.returncode) from exc
         evidence.add_gate(f"{phase}-exit-code", True, f"{phase} command completed")
 
     evidence.add_gate("evidence-written", True, "Evidence files written")
