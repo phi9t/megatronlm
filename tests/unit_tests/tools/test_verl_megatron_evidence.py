@@ -38,6 +38,48 @@ def test_scan_log_ignores_benign_warnings(tmp_path):
     assert evidence.scan_log_for_fatal_patterns(log_path) == []
 
 
+def test_scan_log_still_flags_pre_completion_tracebacks(tmp_path):
+    evidence = load_module()
+    log_path = tmp_path / "rl.log"
+    log_path.write_text(
+        "step:1 - training/global_step:1\n"
+        "Traceback (most recent call last):\n"
+        "Final validation metrics: {}\n",
+        encoding="utf-8",
+    )
+
+    matches = evidence.scan_log_for_fatal_patterns(
+        log_path, ignore_after_completion=True
+    )
+
+    assert matches == [
+        evidence.FatalLogMatch(path=str(log_path), pattern="Traceback", line=2)
+    ]
+
+
+def test_scan_log_records_post_completion_shutdown_tracebacks_separately(tmp_path):
+    evidence = load_module()
+    log_path = tmp_path / "rl.log"
+    log_path.write_text(
+        "step:2 - training/global_step:2\n"
+        "Final validation metrics: {}\n"
+        "Traceback (most recent call last):\n"
+        "KeyError: '/psm_deadbeef'\n",
+        encoding="utf-8",
+    )
+
+    fatal_matches = evidence.scan_log_for_fatal_patterns(
+        log_path, ignore_after_completion=True
+    )
+    shutdown_matches = evidence.scan_log_for_post_completion_fatal_patterns(log_path)
+
+    assert fatal_matches == []
+    assert shutdown_matches == [
+        evidence.FatalLogMatch(path=str(log_path), pattern="Traceback", line=3),
+        evidence.FatalLogMatch(path=str(log_path), pattern="KeyError", line=4),
+    ]
+
+
 def test_write_evidence_files(tmp_path):
     evidence = load_module()
     run = evidence.ProductionEvidence(run_dir=tmp_path, status="pass")

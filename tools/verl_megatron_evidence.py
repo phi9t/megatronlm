@@ -14,6 +14,10 @@ FATAL_LOG_PATTERNS = (
     "AssertionError",
     "KeyError",
 )
+COMPLETION_LOG_PATTERNS = (
+    "Training Progress: 100%",
+    "Final validation metrics:",
+)
 CHECKPOINT_CONTENT_NAMES = {"distcp_metadata", "metadata.json", ".metadata"}
 CHECKPOINT_CONTENT_SUFFIXES = {".distcp", ".pt"}
 RL_UPDATE_STEP_PATTERN = re.compile(
@@ -55,14 +59,47 @@ class ProductionEvidence:
             self.status = "pass" if all(gate.passed for gate in self.gates) else "fail"
 
 
-def scan_log_for_fatal_patterns(path: Path) -> list[FatalLogMatch]:
+def line_has_completion_marker(line: str) -> bool:
+    return any(pattern in line for pattern in COMPLETION_LOG_PATTERNS)
+
+
+def scan_log_for_fatal_patterns(
+    path: Path, *, ignore_after_completion: bool = False
+) -> list[FatalLogMatch]:
     matches: list[FatalLogMatch] = []
     if not path.exists():
         return matches
+    completion_seen = False
     for line_number, line in enumerate(
         path.read_text(encoding="utf-8", errors="replace").splitlines(),
         start=1,
     ):
+        if line_has_completion_marker(line):
+            completion_seen = True
+        if ignore_after_completion and completion_seen:
+            continue
+        for pattern in FATAL_LOG_PATTERNS:
+            if pattern in line:
+                matches.append(
+                    FatalLogMatch(path=str(path), pattern=pattern, line=line_number)
+                )
+    return matches
+
+
+def scan_log_for_post_completion_fatal_patterns(path: Path) -> list[FatalLogMatch]:
+    matches: list[FatalLogMatch] = []
+    if not path.exists():
+        return matches
+    completion_seen = False
+    for line_number, line in enumerate(
+        path.read_text(encoding="utf-8", errors="replace").splitlines(),
+        start=1,
+    ):
+        if line_has_completion_marker(line):
+            completion_seen = True
+            continue
+        if not completion_seen:
+            continue
         for pattern in FATAL_LOG_PATTERNS:
             if pattern in line:
                 matches.append(

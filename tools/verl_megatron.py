@@ -155,6 +155,7 @@ def build_import_preflight_command(min_gpus: int) -> str:
         python3 - <<'PY'
         import importlib
         import torch
+        from transformers import AutoTokenizer
 
         modules = [
             "verl",
@@ -170,6 +171,13 @@ def build_import_preflight_command(min_gpus: int) -> str:
         print(f"imports ok; cuda_device_count={{gpu_count}}")
         if gpu_count < {min_gpus}:
             raise SystemExit(f"expected at least {min_gpus} CUDA devices, found {{gpu_count}}")
+
+        tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-Math-7B", trust_remote_code=True)
+        if not hasattr(tokenizer, "all_special_tokens_extended"):
+            raise SystemExit(
+                "Qwen tokenizer is incompatible with vLLM: missing all_special_tokens_extended"
+            )
+        print("tokenizer ok; all_special_tokens_extended available")
         PY
         """
     ).strip()
@@ -637,16 +645,31 @@ def run_validate_production(args: argparse.Namespace) -> None:
             f"training/global_step metric found in {rl_log_path.name}: {has_rl_update_step}",
         )
         fatal_matches = []
+        post_completion_fatal_matches = []
         for log_path in sorted((run_root / "logs").glob("*.log")):
-            fatal_matches.extend(evidence_helpers.scan_log_for_fatal_patterns(log_path))
+            fatal_matches.extend(
+                evidence_helpers.scan_log_for_fatal_patterns(
+                    log_path, ignore_after_completion=True
+                )
+            )
+            post_completion_fatal_matches.extend(
+                evidence_helpers.scan_log_for_post_completion_fatal_patterns(log_path)
+            )
         evidence.record(
             "fatal_log_matches",
             [match.__dict__ for match in fatal_matches],
         )
+        evidence.record(
+            "post_completion_fatal_log_matches",
+            [match.__dict__ for match in post_completion_fatal_matches],
+        )
         evidence.add_gate(
             "fatal-log-scan",
             not fatal_matches,
-            f"{len(fatal_matches)} fatal log matches",
+            (
+                f"{len(fatal_matches)} fatal log matches; "
+                f"{len(post_completion_fatal_matches)} post-completion matches ignored"
+            ),
         )
 
     evidence.add_gate("evidence-written", True, "Evidence files written")

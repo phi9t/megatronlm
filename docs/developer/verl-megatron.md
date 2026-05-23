@@ -41,6 +41,12 @@ The setup command:
 * builds `verl-megatron-fsdp:local` from `tools/verl_megatron/Dockerfile`,
 * prepares the GSM8K SFT parquet data under `local/verl-data/gsm8k_sft`.
 
+The Dockerfile pins Transformers 5.8.x for Megatron-Bridge model registration
+and installs `tools/verl_megatron/verl_megatron_compat.py` through a `.pth`
+startup hook as a small vLLM compatibility shim. The shim restores the Qwen2 tokenizer
+`all_special_tokens_extended` property that vLLM 0.11.0 still reads during
+rollout server startup.
+
 The patch is intentionally repo-owned instead of committed inside the
 third-party submodule. It fixes the Megatron-Bridge HF-to-Megatron conversion
 path for FSDP DTensors by using the local `orig_param` shape for tensor-parallel
@@ -69,7 +75,8 @@ mise run verl-megatron-preflight
 
 This verifies the pinned submodules, confirms the Bridge patch is applied,
 checks the Docker image, imports verl, Megatron-Bridge, and Megatron-Core inside
-the container, and confirms that at least eight CUDA devices are visible. For a
+the container, confirms that at least eight CUDA devices are visible, and checks
+that the Qwen2 tokenizer exposes the vLLM-compatible special-token API. For a
 CPU-only command-shape check, use:
 
 ```bash

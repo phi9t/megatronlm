@@ -73,6 +73,39 @@ def test_image_build_command_uses_repo_owned_dockerfile():
     ]
 
 
+def test_dockerfile_installs_vllm_tokenizer_compatibility_shim():
+    dockerfile = Path(__file__).parents[3] / "tools/verl_megatron/Dockerfile"
+
+    content = dockerfile.read_text(encoding="utf-8")
+
+    assert "transformers>=5.8.1,<5.9.0" in content
+    assert "COPY tools/verl_megatron/verl_megatron_compat.py" in content
+    assert "COPY tools/verl_megatron/verl_megatron_compat.pth" in content
+
+
+def test_compatibility_shim_adds_vllm_tokenizer_attribute():
+    shim = Path(__file__).parents[3] / "tools/verl_megatron/verl_megatron_compat.py"
+
+    content = shim.read_text(encoding="utf-8")
+
+    assert "PreTrainedTokenizerBase" in content
+    assert "all_special_tokens_extended" in content
+    assert "all_special_tokens" in content
+
+    pth = Path(__file__).parents[3] / "tools/verl_megatron/verl_megatron_compat.pth"
+    assert pth.read_text(encoding="utf-8").strip() == "import verl_megatron_compat"
+
+
+def test_import_preflight_checks_vllm_tokenizer_compatibility():
+    tool = load_module()
+
+    command = tool.build_import_preflight_command(8)
+
+    assert "AutoTokenizer.from_pretrained" in command
+    assert "Qwen/Qwen2.5-Math-7B" in command
+    assert "all_special_tokens_extended" in command
+
+
 def test_production_sft_command_uses_bounded_megatron_fsdp_run():
     tool = load_module()
 
