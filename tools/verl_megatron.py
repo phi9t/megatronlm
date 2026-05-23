@@ -619,6 +619,34 @@ def run_validate_production(args: argparse.Namespace) -> None:
             raise SystemExit(exc.returncode) from exc
         evidence.add_gate(f"{phase}-exit-code", True, f"{phase} command completed")
 
+    if not config.dry_run:
+        sft_inventory = evidence_helpers.inventory_paths(run_root / "sft")
+        rl_inventory = evidence_helpers.inventory_paths(run_root / "rl")
+        evidence.record("sft_checkpoint_inventory", sft_inventory)
+        evidence.record("rl_checkpoint_inventory", rl_inventory)
+        evidence.add_gate(
+            "sft-checkpoint-content",
+            evidence_helpers.has_checkpoint_content(run_root / "sft"),
+            f"{len(sft_inventory)} files under SFT output",
+        )
+        evidence.add_gate(
+            "rl-step-evidence",
+            bool(list((run_root / "logs").glob("rl.log"))),
+            "RL log exists; metric parsing is recorded in the log artifact",
+        )
+        fatal_matches = []
+        for log_path in sorted((run_root / "logs").glob("*.log")):
+            fatal_matches.extend(evidence_helpers.scan_log_for_fatal_patterns(log_path))
+        evidence.record(
+            "fatal_log_matches",
+            [match.__dict__ for match in fatal_matches],
+        )
+        evidence.add_gate(
+            "fatal-log-scan",
+            not fatal_matches,
+            f"{len(fatal_matches)} fatal log matches",
+        )
+
     evidence.add_gate("evidence-written", True, "Evidence files written")
     evidence_helpers.write_evidence(evidence)
     print(f"Evidence written to {run_root / 'evidence'}")

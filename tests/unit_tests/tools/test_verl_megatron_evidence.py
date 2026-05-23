@@ -56,3 +56,21 @@ def test_write_evidence_files(tmp_path):
     assert evidence_json["records"]["versions"]["verl"] == "7dc39fec"
     assert "# verl Megatron Production Validation" in summary
     assert "- PASS: container-gpu-count - 8 CUDA devices visible" in summary
+
+
+def test_checkpoint_inventory_detects_model_content(tmp_path):
+    evidence = load_module()
+    ckpt = tmp_path / "global_step_2/model"
+    ckpt.mkdir(parents=True)
+    (ckpt / "distcp_metadata").write_text("metadata", encoding="utf-8")
+
+    inventory = evidence.inventory_paths(tmp_path)
+
+    assert any(item["path"].endswith("distcp_metadata") for item in inventory)
+    assert evidence.has_checkpoint_content(tmp_path) is True
+
+
+def test_checkpoint_inventory_fails_when_empty(tmp_path):
+    evidence = load_module()
+
+    assert evidence.has_checkpoint_content(tmp_path) is False

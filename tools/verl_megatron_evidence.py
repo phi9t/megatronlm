@@ -75,6 +75,19 @@ def inventory_paths(root: Path) -> list[dict[str, Any]]:
     ]
 
 
+def has_checkpoint_content(root: Path) -> bool:
+    if not root.exists():
+        return False
+    for path in root.rglob("*"):
+        if path.is_file() and path.name in {
+            "distcp_metadata",
+            "metadata.json",
+            "latest_checkpointed_iteration.txt",
+        }:
+            return True
+    return any(path.is_file() for path in root.rglob("*.pt"))
+
+
 def write_evidence(evidence: ProductionEvidence) -> None:
     evidence.finish()
     evidence_dir = evidence.run_dir / "evidence"
