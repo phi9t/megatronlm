@@ -85,8 +85,10 @@ def test_production_sft_command_uses_bounded_megatron_fsdp_run():
     assert "engine=megatron" in command
     assert "engine.use_megatron_fsdp=True" in command
     assert "engine.tensor_model_parallel_size=4" in command
+    assert "model.path=Qwen/Qwen2.5-Math-7B" in command
     assert "trainer.total_training_steps=2" in command
     assert "checkpoint.save_contents=" in command
+    assert '"model"' in command
 
 
 def test_production_rl_command_uses_upstream_grpo_megatron_fsdp_shape():
@@ -106,6 +108,13 @@ def test_production_rl_command_uses_upstream_grpo_megatron_fsdp_shape():
     assert "actor_rollout_ref.actor.megatron.use_megatron_fsdp=True" in command
     assert "actor_rollout_ref.ref.megatron.use_megatron_fsdp=True" in command
     assert "actor_rollout_ref.actor.megatron.tensor_model_parallel_size=4" in command
+    assert "actor_rollout_ref.ref.megatron.tensor_model_parallel_size=4" in command
+    assert "data.train_files=" in command
+    assert "/workspace/local/verl-data/gsm8k/train.parquet" in command
+    assert "/workspace/local/verl-data/math/train.parquet" in command
+    assert "data.val_files=" in command
+    assert "/workspace/local/verl-data/gsm8k/test.parquet" in command
+    assert "/workspace/local/verl-data/math/test.parquet" in command
     assert "trainer.n_gpus_per_node=8" in command
     assert "trainer.total_training_steps=2" in command
     assert "trainer.default_local_dir=/workspace/local/verl-runs/production-validation/run/rl" in command
