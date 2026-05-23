@@ -218,3 +218,34 @@ def test_validate_production_writes_evidence_on_phase_failure(tmp_path, monkeypa
     assert evidence["status"] == "fail"
     assert gate["passed"] is False
     assert "exit code 23" in gate["detail"]
+    assert evidence["records"]["phase_commands"]["container-preflight"]
+    assert evidence["records"]["phase_artifacts"]["container-preflight"]["log_path"].endswith(
+        "/logs/container-preflight.log"
+    )
+    assert evidence["records"]["phase_artifacts"]["container-preflight"]["exit_code_path"].endswith(
+        "/logs/container-preflight.exitcode"
+    )
+
+
+def test_validate_production_writes_evidence_on_image_failure(tmp_path, monkeypatch):
+    tool = load_module()
+
+    monkeypatch.setattr(tool, "repo_root", lambda: tmp_path)
+    monkeypatch.setattr(tool, "verify_pins", lambda config: None)
+    monkeypatch.setattr(tool, "patch_state", lambda config: "applied")
+
+    def fail_require_image(config):
+        raise SystemExit("Docker image missing")
+
+    monkeypatch.setattr(tool, "require_image", fail_require_image)
+
+    with pytest.raises(SystemExit) as exc_info:
+        tool.main(["validate-production", "--run-id", "image-failure", "--total-steps", "2"])
+
+    assert exc_info.value.code == 1
+    evidence_path = tmp_path / "local/verl-runs/production-validation/image-failure/evidence/evidence.json"
+    evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    gate = next(gate for gate in evidence["gates"] if gate["name"] == "docker-image")
+    assert evidence["status"] == "fail"
+    assert gate["passed"] is False
+    assert "Docker image missing" in gate["detail"]

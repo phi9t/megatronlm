@@ -79,6 +79,12 @@ def host_run_dir(config: VerLMegatronConfig, run_id: str) -> Path:
     return config.repo_root / "local/verl-runs/production-validation" / run_id
 
 
+def system_exit_code(exc: SystemExit) -> int:
+    if isinstance(exc.code, int):
+        return exc.code
+    return 1
+
+
 def build_pythonpath() -> str:
     paths = [
         "/workspace/third_party/verl",
@@ -513,7 +519,13 @@ def run_validate_production(args: argparse.Namespace) -> None:
     evidence.record("workspace_run_dir", workspace_root)
     evidence.record("rl_model_source", "base_model")
 
-    verify_pins(config)
+    try:
+        verify_pins(config)
+    except SystemExit as exc:
+        evidence.add_gate("submodule-pins", False, f"Submodule pin validation failed: {exc}")
+        if not config.dry_run:
+            evidence_helpers.write_evidence(evidence)
+        raise SystemExit(system_exit_code(exc)) from exc
     evidence.add_gate("submodule-pins", True, "Expected submodule commits match")
 
     if not config.dry_run:
@@ -526,7 +538,13 @@ def run_validate_production(args: argparse.Namespace) -> None:
         print("check Megatron-Bridge compatibility patch is applied")
         evidence.add_gate("bridge-patch", True, "Dry-run assumes setup applies the Bridge patch")
 
-    require_image(config)
+    try:
+        require_image(config)
+    except SystemExit as exc:
+        evidence.add_gate("docker-image", False, f"Docker image validation failed: {exc}")
+        if not config.dry_run:
+            evidence_helpers.write_evidence(evidence)
+        raise SystemExit(system_exit_code(exc)) from exc
     evidence.add_gate("docker-image", True, f"Docker image available: {config.image}")
 
     preflight_command = build_import_preflight_command(8)
@@ -572,11 +590,22 @@ def run_validate_production(args: argparse.Namespace) -> None:
         ("sft", sft_command),
         ("rl", rl_command),
     ]
+    phase_commands = {phase: command for phase, command in phases}
+    phase_artifacts = {
+        phase: {
+            "log_path": f"{workspace_root}/logs/{phase}.log",
+            "exit_code_path": f"{workspace_root}/logs/{phase}.exitcode",
+        }
+        for phase, _ in phases
+    }
+    evidence.record("phase_commands", phase_commands)
+    evidence.record("phase_artifacts", phase_artifacts)
     for phase, command in phases:
+        artifacts = phase_artifacts[phase]
         logged = build_logged_inner_command(
             command,
-            log_path=f"{workspace_root}/logs/{phase}.log",
-            exit_code_path=f"{workspace_root}/logs/{phase}.exitcode",
+            log_path=artifacts["log_path"],
+            exit_code_path=artifacts["exit_code_path"],
         )
         try:
             run_command(build_docker_run_command(config, logged), cwd=config.repo_root, dry_run=config.dry_run)
