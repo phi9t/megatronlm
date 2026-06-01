@@ -51,6 +51,8 @@ def check_model(path: Path) -> list[str]:
     for field in ("model", "slug", "family", "source", "config", "prelude", "layers", "head"):
         if field not in data:
             errors.append(f"{path}: missing model field: {field}")
+    if not isinstance(data.get("source"), str) or not data.get("source", "").strip():
+        errors.append(f"{path}: model source must be a non-empty string")
     if data.get("family") not in {"dense-qknorm", "moe-qknorm", "mla-moe"}:
         errors.append(f"{path}: unknown model family: {data.get('family')}")
     errors.extend(check_finite_numbers(path, data))

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -15,7 +16,7 @@ if str(_SCRIPT_DIR) not in sys.path:
 from _refs import ref  # noqa: E402
 
 
-MODEL_SOURCE_REF = "d681f6898b64d613991e0b1ac4b2c631bf9aca36"
+MODEL_SOURCE_REF = os.environ.get("MEGATRON_EXPLORER_SOURCE_REF", "main")
 
 
 FALLBACKS: dict[str, dict] = {
