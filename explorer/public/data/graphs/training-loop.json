@@ -1,0 +1,142 @@
+{
+  "slug": "training-loop",
+  "label": "Training Loop",
+  "generated_at": "static",
+  "warnings": [],
+  "nodes": [
+    {
+      "id": "yaml",
+      "label": "YAML config",
+      "group": "entry",
+      "ref": "examples/llama/llama_config.py:426",
+      "symbol": "class LlamaRunConfig",
+      "desc": "Pydantic-style config objects turn YAML presets into Megatron CLI arguments.",
+      "docs": [
+        "examples/llama/README.md"
+      ]
+    },
+    {
+      "id": "launcher",
+      "label": "Launcher",
+      "group": "entry",
+      "ref": "examples/llama/run_llama.py:37",
+      "symbol": "def main",
+      "desc": "The example launcher validates config, prepares runtime paths, and invokes the training command.",
+      "docs": []
+    },
+    {
+      "id": "args",
+      "label": "Arguments",
+      "group": "training",
+      "ref": "megatron/training/yaml_arguments.py:390",
+      "symbol": "def core_transformer_config_from_yaml",
+      "desc": "Megatron normalizes CLI/YAML values into runtime arguments and transformer config.",
+      "docs": []
+    },
+    {
+      "id": "initialize",
+      "label": "Initialize",
+      "group": "training",
+      "ref": "megatron/training/initialize.py:41",
+      "symbol": "def initialize_megatron",
+      "desc": "Distributed initialization, tokenizer setup, random seeds, and model-parallel groups.",
+      "docs": []
+    },
+    {
+      "id": "train",
+      "label": "Training loop",
+      "group": "training",
+      "ref": "megatron/training/training.py:1023",
+      "symbol": "def pretrain",
+      "desc": "Top-level pretraining loop wiring model, data iterators, forward/backward, optimizer, evaluation, and checkpointing.",
+      "docs": []
+    },
+    {
+      "id": "dataset",
+      "label": "Datasets",
+      "group": "state",
+      "ref": "megatron/core/datasets/gpt_dataset.py:101",
+      "symbol": "class GPTDataset",
+      "desc": "GPT-style indexed datasets provide token samples to the training loop.",
+      "docs": []
+    },
+    {
+      "id": "model",
+      "label": "Model provider",
+      "group": "core",
+      "ref": "megatron/core/models/gpt/gpt_model.py:44",
+      "symbol": "class GPTModel",
+      "desc": "The GPT model wraps embeddings, transformer layers, final norm, and output projection.",
+      "docs": []
+    },
+    {
+      "id": "schedule",
+      "label": "Forward/backward",
+      "group": "parallel",
+      "ref": "megatron/core/pipeline_parallel/schedules.py:47",
+      "symbol": "def get_forward_backward_func",
+      "desc": "Pipeline schedules drive microbatch forward/backward execution.",
+      "docs": []
+    },
+    {
+      "id": "optimizer",
+      "label": "Optimizer",
+      "group": "state",
+      "ref": "megatron/core/optimizer/optimizer.py:100",
+      "symbol": "class MegatronOptimizer",
+      "desc": "Optimizer wrapper coordinates parameter updates, grad scaling, clipping, and distributed state.",
+      "docs": []
+    },
+    {
+      "id": "checkpoint",
+      "label": "Checkpointing",
+      "group": "state",
+      "ref": "megatron/training/checkpointing.py:495",
+      "symbol": "def save_checkpoint",
+      "desc": "Checkpoint save/load preserves model, optimizer, RNG, and distributed state.",
+      "docs": []
+    }
+  ],
+  "edges": [
+    {
+      "from": "yaml",
+      "to": "launcher"
+    },
+    {
+      "from": "launcher",
+      "to": "args"
+    },
+    {
+      "from": "args",
+      "to": "initialize"
+    },
+    {
+      "from": "initialize",
+      "to": "train"
+    },
+    {
+      "from": "train",
+      "to": "dataset"
+    },
+    {
+      "from": "train",
+      "to": "model"
+    },
+    {
+      "from": "train",
+      "to": "schedule"
+    },
+    {
+      "from": "schedule",
+      "to": "optimizer"
+    },
+    {
+      "from": "optimizer",
+      "to": "checkpoint"
+    },
+    {
+      "from": "checkpoint",
+      "to": "train"
+    }
+  ]
+}

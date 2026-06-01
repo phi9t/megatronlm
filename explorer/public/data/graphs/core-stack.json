@@ -1,0 +1,144 @@
+{
+  "slug": "core-stack",
+  "label": "Megatron Core Stack",
+  "generated_at": "static",
+  "warnings": [],
+  "nodes": [
+    {
+      "id": "gpt",
+      "label": "GPTModel",
+      "group": "core",
+      "ref": "megatron/core/models/gpt/gpt_model.py:44",
+      "symbol": "class GPTModel",
+      "desc": "GPTModel assembles embeddings, transformer block, final norm, and output layer.",
+      "docs": []
+    },
+    {
+      "id": "block",
+      "label": "TransformerBlock",
+      "group": "core",
+      "ref": "megatron/core/transformer/transformer_block.py:260",
+      "symbol": "class TransformerBlock",
+      "desc": "A stack of transformer layers built from module specs.",
+      "docs": []
+    },
+    {
+      "id": "layer",
+      "label": "TransformerLayer",
+      "group": "core",
+      "ref": "megatron/core/transformer/transformer_layer.py:290",
+      "symbol": "class TransformerLayer",
+      "desc": "Self-attention, residual paths, layer norms, dense MLP, or MoE.",
+      "docs": []
+    },
+    {
+      "id": "attention",
+      "label": "Attention",
+      "group": "core",
+      "ref": "megatron/core/transformer/attention.py:276",
+      "symbol": "class Attention",
+      "desc": "Attention projection, core attention, and output projection.",
+      "docs": []
+    },
+    {
+      "id": "mlp",
+      "label": "Dense MLP",
+      "group": "core",
+      "ref": "megatron/core/transformer/mlp.py:147",
+      "symbol": "class MLP",
+      "desc": "Dense feed-forward block used by standard transformer layers.",
+      "docs": []
+    },
+    {
+      "id": "moe",
+      "label": "MoELayer",
+      "group": "core",
+      "ref": "megatron/core/transformer/moe/moe_layer.py:207",
+      "symbol": "class MoELayer",
+      "desc": "Mixture-of-Experts routing, dispatch, expert compute, and combine.",
+      "docs": []
+    },
+    {
+      "id": "tp",
+      "label": "Tensor parallel",
+      "group": "parallel",
+      "ref": "megatron/core/tensor_parallel/layers.py:770",
+      "symbol": "class ColumnParallelLinear",
+      "desc": "Layer-level sharding for large projections.",
+      "docs": []
+    },
+    {
+      "id": "pp",
+      "label": "Pipeline parallel",
+      "group": "parallel",
+      "ref": "megatron/core/pipeline_parallel/schedules.py:47",
+      "symbol": "def get_forward_backward_func",
+      "desc": "Layer-depth partitioning and microbatch schedules.",
+      "docs": []
+    },
+    {
+      "id": "ddp",
+      "label": "Distributed",
+      "group": "parallel",
+      "ref": "megatron/core/distributed/distributed_data_parallel.py:23",
+      "symbol": "class DistributedDataParallel",
+      "desc": "Data-parallel gradient synchronization and overlap.",
+      "docs": []
+    },
+    {
+      "id": "optim",
+      "label": "Optimizer",
+      "group": "state",
+      "ref": "megatron/core/optimizer/distrib_optimizer.py:102",
+      "symbol": "class DistributedOptimizer",
+      "desc": "Distributed optimizer state and parameter shard handling.",
+      "docs": []
+    }
+  ],
+  "edges": [
+    {
+      "from": "gpt",
+      "to": "block"
+    },
+    {
+      "from": "block",
+      "to": "layer"
+    },
+    {
+      "from": "layer",
+      "to": "attention"
+    },
+    {
+      "from": "layer",
+      "to": "mlp"
+    },
+    {
+      "from": "layer",
+      "to": "moe"
+    },
+    {
+      "from": "attention",
+      "to": "tp"
+    },
+    {
+      "from": "mlp",
+      "to": "tp"
+    },
+    {
+      "from": "moe",
+      "to": "tp"
+    },
+    {
+      "from": "block",
+      "to": "pp"
+    },
+    {
+      "from": "gpt",
+      "to": "ddp"
+    },
+    {
+      "from": "ddp",
+      "to": "optim"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "slug": "training-loop",
+    "label": "Training Loop",
+    "manifest": "graphs/training-loop.json"
+  },
+  {
+    "slug": "core-stack",
+    "label": "Megatron Core Stack",
+    "manifest": "graphs/core-stack.json"
+  }
+]
