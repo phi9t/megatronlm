@@ -1,0 +1,7 @@
+[
+  {
+    "slug": "strategies",
+    "label": "Parallelism Strategies",
+    "manifest": "parallelism/strategies.json"
+  }
+]
