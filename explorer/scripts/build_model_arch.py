@@ -15,6 +15,9 @@ if str(_SCRIPT_DIR) not in sys.path:
 from _refs import ref  # noqa: E402
 
 
+MODEL_SOURCE_REF = "d681f6898b64d613991e0b1ac4b2c631bf9aca36"
+
+
 FALLBACKS: dict[str, dict] = {
     "qwen3-0_6b": {
         "hidden_size": 1024,
@@ -520,7 +523,7 @@ def build_manifest(slug: str, label: str, family: str, repo_root: Path) -> dict:
         "model": label,
         "slug": slug,
         "family": family,
-        "source": "fallback",
+        "source": MODEL_SOURCE_REF,
         "config": cfg,
         "prelude": prelude,
         "layers": layers,

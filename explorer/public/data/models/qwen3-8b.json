@@ -2,7 +2,7 @@
   "model": "Qwen3-8B",
   "slug": "qwen3-8b",
   "family": "dense-qknorm",
-  "source": "fallback",
+  "source": "d681f6898b64d613991e0b1ac4b2c631bf9aca36",
   "config": {
     "hidden_size": 4096,
     "num_hidden_layers": 36,

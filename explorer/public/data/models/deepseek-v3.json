@@ -2,7 +2,7 @@
   "model": "DeepSeek-V3",
   "slug": "deepseek-v3",
   "family": "mla-moe",
-  "source": "fallback",
+  "source": "d681f6898b64d613991e0b1ac4b2c631bf9aca36",
   "config": {
     "hidden_size": 7168,
     "num_hidden_layers": 61,
