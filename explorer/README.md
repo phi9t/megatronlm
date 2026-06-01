@@ -1,16 +1,28 @@
 # Megatron Explorer
 
-Standalone Vite/React/Tailwind explorer for Megatron-LM and Megatron Core.
+An interactive, static explorer for Megatron-LM and Megatron Core internals.
 
-## Development
+## Modes
+
+- Guide: generated inner-workings guide.
+- Components: source-linked training loop and Megatron Core graphs.
+- Parallelism: TP, PP, DP, CP, EP, and FSDP rank geometry.
+- Model Architecture: Qwen3 and DeepSeek-V3 circuits grounded in Megatron Core source.
+
+## Run
 
 ```bash
-npm install
-npm run dev
+cd explorer
+./scripts/workflow.sh gen-data
+./scripts/workflow.sh install
+./scripts/workflow.sh dev
 ```
 
-Run type checking with:
+## Verify
 
 ```bash
-npm run typecheck
+cd explorer
+./scripts/workflow.sh verify
 ```
+
+The explorer is a documentation and visualization tool. It does not launch Megatron training jobs.

@@ -56,6 +56,7 @@ dev_server() {
 
 verify() {
   gen_data
+  install_deps
   build_app
 }
 
