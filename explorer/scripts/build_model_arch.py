@@ -413,10 +413,10 @@ def _symbol_exists(repo_root: Path, file: str, symbol: str) -> bool:
     return any(symbol in line for line in path.read_text(encoding="utf-8").splitlines())
 
 
-def make_block(bdef: BlockDef, repo_root: Path) -> dict:
+def make_block(bdef: BlockDef, repo_root: Path, warnings: list[str]) -> dict:
     bid, btype, kind, label, display_symbol, grep_symbol, source_file, desc, note = bdef
     if not _symbol_exists(repo_root, source_file, grep_symbol):
-        raise ValueError(f"missing symbol {grep_symbol!r} in {source_file}")
+        warnings.append(f"unresolved source anchor {grep_symbol!r} in {source_file}; using file-level ref")
     block = {
         "id": bid,
         "type": btype,
@@ -433,7 +433,8 @@ def make_block(bdef: BlockDef, repo_root: Path) -> dict:
 
 def build_manifest(slug: str, label: str, family: str, repo_root: Path) -> dict:
     cfg = dict(FALLBACKS[slug])
-    mb = lambda bdef: make_block(bdef, repo_root)
+    warnings: list[str] = []
+    mb = lambda bdef: make_block(bdef, repo_root, warnings)
     prelude = [mb(b) for b in PRELUDE]
     head = [mb(b) for b in HEAD]
 
@@ -519,7 +520,7 @@ def build_manifest(slug: str, label: str, family: str, repo_root: Path) -> dict:
     else:
         raise ValueError(f"unknown model family: {family}")
 
-    return {
+    manifest = {
         "model": label,
         "slug": slug,
         "family": family,
@@ -529,6 +530,9 @@ def build_manifest(slug: str, label: str, family: str, repo_root: Path) -> dict:
         "layers": layers,
         "head": head,
     }
+    if warnings:
+        manifest["warnings"] = sorted(set(warnings))
+    return manifest
 
 
 def compute_total_params(cfg: dict) -> int:
