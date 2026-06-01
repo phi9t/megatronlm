@@ -2,8 +2,13 @@
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 
+
+LOCAL_REPO_URL = os.environ.get("MEGATRON_EXPLORER_REPO_HOME", "https://github.com/phi9t/megatronlm").rstrip("/")
+SOURCE_REF = os.environ.get("MEGATRON_EXPLORER_SOURCE_REF", "main")
+UPSTREAM_REPO_URL = "https://github.com/NVIDIA/Megatron-LM"
 
 SECTIONS = [
     ("README.md", "Megatron-LM and Megatron Core"),
@@ -60,6 +65,16 @@ def excerpt(text: str, max_lines: int = 90) -> str:
     return "\n".join(kept).strip()
 
 
+def normalize_repo_links(text: str) -> str:
+    return (
+        text.replace(f"{UPSTREAM_REPO_URL}/blob/main/", f"{LOCAL_REPO_URL}/blob/{SOURCE_REF}/")
+        .replace(f"{UPSTREAM_REPO_URL}/tree/main/", f"{LOCAL_REPO_URL}/tree/{SOURCE_REF}/")
+        .replace(f"{UPSTREAM_REPO_URL}/tree/dev", f"{LOCAL_REPO_URL}/tree/{SOURCE_REF}")
+        .replace(UPSTREAM_REPO_URL, LOCAL_REPO_URL)
+        .replace("git clone https://github.com/NVIDIA/Megatron-LM.git", "git clone https://github.com/phi9t/megatronlm.git")
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
@@ -86,7 +101,16 @@ def main() -> None:
         if not path.is_file():
             chunks.extend([f"## {title}", "", f"Source `{rel}` was not found.", ""])
             continue
-        chunks.extend([f"## {title}", "", f"_Source: `{rel}`_", "", excerpt(path.read_text(encoding="utf-8")), ""])
+        chunks.extend(
+            [
+                f"## {title}",
+                "",
+                f"_Source: `{rel}`_",
+                "",
+                normalize_repo_links(excerpt(path.read_text(encoding="utf-8"))),
+                "",
+            ]
+        )
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(chunks).rstrip() + "\n", encoding="utf-8")

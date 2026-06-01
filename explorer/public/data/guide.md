@@ -45,7 +45,7 @@ uv pip install megatron-core
 **Or clone and install from source:**
 
 ```bash
-git clone https://github.com/NVIDIA/Megatron-LM.git
+git clone https://github.com/phi9t/megatronlm.git
 cd Megatron-LM
 uv pip install -e .
 ```
@@ -63,10 +63,10 @@ For NGC container setup and all installation options, see the **[Installation Gu
 - **[2026/03]** **Deprecating Python 3.10 support:** We're officially dropping Python 3.10 support with the upcoming 0.17.0 release. Downstream applications must raise their lower boundary to 3.12 to stay compatible with MCore.
 - **[2026/01]** **[Dynamic Context Parallelism](https://developer.nvidia.com/blog/speeding-up-variable-length-training-with-dynamic-context-parallelism-and-nvidia-megatron-core/)** - Up to 1.48x speedup for variable-length sequence training with adaptive CP sizing.
 - **[2025/12]** **Megatron Core development has moved to GitHub!** All development and CI now happens in the open. We welcome community contributions.
-- **[2025/10]** **[Megatron Dev Branch](https://github.com/NVIDIA/Megatron-LM/tree/dev)** - early access branch with experimental features.
+- **[2025/10]** **[Megatron Dev Branch](https://github.com/phi9t/megatronlm/tree/main)** - early access branch with experimental features.
 - **[2025/10]** **[Megatron Bridge](https://github.com/NVIDIA-NeMo/Megatron-Bridge)** - Bidirectional converter for interoperability between Hugging Face and Megatron checkpoints, featuring production-ready recipes for popular models.
-- **[2025/08]** **[MoE Q3-Q4 2025 Roadmap](https://github.com/NVIDIA/Megatron-LM/issues/1729)** - Comprehensive roadmap for MoE features including DeepSeek-V3, Qwen3, advanced parallelism strategies, FP8 optimizations, and Blackwell performance enhancements.
-- **[2025/08]** **[GPT-OSS Model](https://github.com/NVIDIA/Megatron-LM/issues/1739)** - Advanced features including YaRN RoPE scaling, attention sinks, and custom activation functions are being integrated into Megatron Core.
+- **[2025/08]** **[MoE Q3-Q4 2025 Roadmap](https://github.com/phi9t/megatronlm/issues/1729)** - Comprehensive roadmap for MoE features including DeepSeek-V3, Qwen3, advanced parallelism strategies, FP8 optimizations, and Blackwell performance enhancements.
+- **[2025/08]** **[GPT-OSS Model](https://github.com/phi9t/megatronlm/issues/1739)** - Advanced features including YaRN RoPE scaling, attention sinks, and custom activation functions are being integrated into Megatron Core.
 - **[2025/06]** **[Megatron MoE Model Zoo](https://github.com/yanring/Megatron-MoE-ModelZoo)** - Best practices and optimized configurations for training DeepSeek-V3, Mixtral, and Qwen3 MoE models with performance benchmarking and checkpoint conversion tools.
 - **[2025/05]** Megatron Core v0.11.0 brings new capabilities for multi-data center LLM training ([blog](https://developer.nvidia.com/blog/turbocharge-llm-training-across-long-haul-data-center-networks-with-nvidia-nemo-framework/)).
 
@@ -183,7 +183,7 @@ After training or modifying a Megatron model, you can convert it again for deplo
 - **[Megatron Bridge](https://github.com/NVIDIA-NeMo/Megatron-Bridge)** - Training library with bidirectional checkpoint conversion between Hugging Face and Megatron, customizable training loops, and production-ready recipes
 - **[NeMo RL](https://github.com/NVIDIA-NeMo/RL)** - Scalable toolkit for efficient reinforcement learning with RLHF, DPO, and other post-training methods
 - **[NeMo Framework](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)** - Enterprise framework with cloud-native support and end-to-end examples
-- **[Model Optimizer (ModelOpt)](https://github.com/NVIDIA/Model-Optimizer)** - Model optimization toolkit for quantization, pruning, distillation, speculative decoding, and more. Check out end-to-end examples in [examples/post_training/modelopt](https://github.com/NVIDIA/Megatron-LM/tree/main/examples/post_training/modelopt).
+- **[Model Optimizer (ModelOpt)](https://github.com/NVIDIA/Model-Optimizer)** - Model optimization toolkit for quantization, pruning, distillation, speculative decoding, and more. Check out end-to-end examples in [examples/post_training/modelopt](https://github.com/phi9t/megatronlm/tree/main/examples/post_training/modelopt).
 
 **Compatible with:** [Hugging Face Accelerate](https://github.com/huggingface/accelerate), [Colossal-AI](https://github.com/hpcaitech/ColossalAI), [DeepSpeed](https://github.com/microsoft/DeepSpeed)
 
@@ -299,11 +299,11 @@ Each section follows the same path:
 4. **Source trail:** collapsible navigation for the next files to inspect.
 
 The local Llama launcher is the easiest first anchor:
-[`examples/llama/llama_config.py`](https://github.com/NVIDIA/Megatron-LM/blob/main/examples/llama/llama_config.py)
+[`examples/llama/llama_config.py`](https://github.com/phi9t/megatronlm/blob/main/examples/llama/llama_config.py)
 turns YAML presets under
-[`examples/llama/configs/`](https://github.com/NVIDIA/Megatron-LM/tree/main/examples/llama/configs)
+[`examples/llama/configs/`](https://github.com/phi9t/megatronlm/tree/main/examples/llama/configs)
 into Megatron CLI arguments. Core Megatron argument validation lives in
-[`megatron/training/yaml_arguments.py`](https://github.com/NVIDIA/Megatron-LM/blob/main/megatron/training/yaml_arguments.py).
+[`megatron/training/yaml_arguments.py`](https://github.com/phi9t/megatronlm/blob/main/megatron/training/yaml_arguments.py).
 
 ## One-GPU Training and Batch Math
 
@@ -326,7 +326,7 @@ data:
   mode: mock
 ```
 
-Source: [`examples/llama/configs/llama_anchor_smoke.yaml`](https://github.com/NVIDIA/Megatron-LM/blob/main/examples/llama/configs/llama_anchor_smoke.yaml#L21-L40).
+Source: [`examples/llama/configs/llama_anchor_smoke.yaml`](https://github.com/phi9t/megatronlm/blob/main/examples/llama/configs/llama_anchor_smoke.yaml#L21-L40).
 
 **Megatron code:**
 
@@ -340,7 +340,7 @@ add_arg(args, "--train-samples", self.train_samples)
 Why this matters: the Llama YAML keeps the Playbook batch symbols visible, then
 renders them to the exact Megatron flags consumed by the training loop.
 
-Source: [`TrainingConfig.to_args()`](https://github.com/NVIDIA/Megatron-LM/blob/main/examples/llama/llama_config.py#L223-L230).
+Source: [`TrainingConfig.to_args()`](https://github.com/phi9t/megatronlm/blob/main/examples/llama/llama_config.py#L223-L230).
 
 ```python
 if args.global_batch_size is None:
@@ -354,7 +354,7 @@ assert args.global_batch_size > 0
 Why this matters: if the user does not set a global batch, Megatron defaults it
 to one microbatch per data-parallel rank.
 
-Source: [`yaml_arguments.py`](https://github.com/NVIDIA/Megatron-LM/blob/main/megatron/training/yaml_arguments.py#L103-L118).
+Source: [`yaml_arguments.py`](https://github.com/phi9t/megatronlm/blob/main/megatron/training/yaml_arguments.py#L103-L118).
 
 
 ## Data Parallelism and Gradient Accumulation
@@ -424,12 +424,12 @@ _Source: `docs/user-guide/features/megatron_fsdp.md`_
 **Megatron-FSDP** is an NVIDIA-developed distributed parallelism library written in native PyTorch that provides a high-performance implementation of **Fully Sharded Data Parallelism (FSDP)**. It offers seamless cross-compatibility with various deep learning frameworks and parallelism libraries such as Megatron-Core, and is performance-optimized to support training and inference of extremely large PyTorch models at data-center scale on NVIDIA GPUs.
 
 - PyPI: https://pypi.org/project/megatron-fsdp/
-- Source Code: https://github.com/NVIDIA/Megatron-LM/tree/main/megatron/core/distributed/fsdp/src
+- Source Code: https://github.com/phi9t/megatronlm/tree/main/megatron/core/distributed/fsdp/src
 
 ### 🧩 Compatibility
 
 - PyTorch **[DeviceMesh](https://docs.pytorch.org/docs/2.11/distributed.html#torch.distributed.device_mesh.DeviceMesh)**, **[DTensor](https://docs.pytorch.org/docs/stable/distributed.tensor.html)**, and **[Distributed Checkpoint (DCP)](https://docs.pytorch.org/docs/stable/distributed.checkpoint.html)**
-- **[Megatron Core](https://github.com/NVIDIA/Megatron-LM)**
+- **[Megatron Core](https://github.com/phi9t/megatronlm)**
 - **[TransformerEngine](https://github.com/NVIDIA/TransformerEngine)**
 - **[NVIDIA NeMo Framework Container](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/nemo)**
 
@@ -465,7 +465,7 @@ Megatron-FSDP is bundled with Megatron-Core, which can be installed via `pip`:
 pip install --no-build-isolation megatron-core[mlm,dev]
 
 # Install from Source
-git clone https://github.com/NVIDIA/Megatron-LM.git
+git clone https://github.com/phi9t/megatronlm.git
 cd Megatron-LM
 pip install --no-build-isolation .[mlm,dev]
 ```

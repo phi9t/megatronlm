@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ArrowLeft, BookOpen, Boxes, Network, SplitSquareHorizontal } from 'lucide-react'
-import { REPO_HOME, logoMarkUrl } from './lib/assets'
+import { REPO_HOME, REPO_LABEL, logoMarkUrl } from './lib/assets'
 import type { ExplorerMode } from './explorer-kit/mode'
 import GuideExplorer from './guide/GuideExplorer'
 import ComponentExplorer from './components-deepdive/ComponentExplorer'
@@ -54,7 +54,7 @@ export default function App() {
             </a>
             <a href={REPO_HOME} className="back-home-link" target="_blank" rel="noopener noreferrer">
               <ArrowLeft size={14} aria-hidden="true" />
-              <span>NVIDIA/Megatron-LM</span>
+              <span>{REPO_LABEL}</span>
             </a>
             <div className="header-title-row">
               <img src={logoMarkUrl()} alt="" className="header-logo" width={32} height={32} />

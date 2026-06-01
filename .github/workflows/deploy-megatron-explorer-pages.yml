@@ -12,20 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Deploy Ultra-Scale Playbook Pages
+name: Deploy Megatron Explorer Pages
 
 on:
   workflow_dispatch:
   push:
     branches:
       - main
-      - ultra-scale-playbook-pages
+      - feature/megatron-explorer
+    paths:
+      - explorer/**
+      - .github/workflows/deploy-megatron-explorer-pages.yml
 
 permissions:
   contents: write
 
 concurrency:
-  group: ultra-scale-playbook-pages
+  group: megatron-explorer-pages
   cancel-in-progress: true
 
 jobs:
@@ -43,15 +46,22 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: docs/ultra-scale-playbook/app/package-lock.json
+          cache-dependency-path: explorer/package-lock.json
 
-      - name: Build Ultra-Scale Playbook
-        working-directory: docs/ultra-scale-playbook/app
+      - name: Build Megatron Explorer
+        working-directory: explorer
+        env:
+          MEGATRON_EXPLORER_REPO_HOME: https://github.com/phi9t/megatronlm
+          MEGATRON_EXPLORER_SOURCE_REF: ${{ github.sha }}
+          VITE_BASE_PATH: /megatronlm/explorer/
+          VITE_REPO_HOME: https://github.com/phi9t/megatronlm
+          VITE_SOURCE_REF: ${{ github.sha }}
         run: |
           npm ci
+          ./scripts/workflow.sh gen-data
           npm run build
 
-      - name: Publish gh-pages branch
+      - name: Publish explorer directory
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -59,18 +69,22 @@ jobs:
 
           rm -rf local/pages-publish
           mkdir -p local/pages-publish
-          git clone --depth 1 --branch gh-pages "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" local/pages-existing || true
-          cp -R docs/ultra-scale-playbook/app/dist/. local/pages-publish/
-          if [ -d local/pages-existing/explorer ]; then
-            cp -R local/pages-existing/explorer local/pages-publish/explorer
+          git clone --depth 1 --branch gh-pages "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" local/pages-publish || true
+
+          if [ ! -d local/pages-publish/.git ]; then
+            git -C local/pages-publish init
+            git -C local/pages-publish checkout -B gh-pages
           fi
+
+          rm -rf local/pages-publish/explorer
+          mkdir -p local/pages-publish/explorer
+          cp -R explorer/dist/. local/pages-publish/explorer/
           touch local/pages-publish/.nojekyll
 
-          git -C local/pages-publish init
           git -C local/pages-publish config user.name "github-actions[bot]"
           git -C local/pages-publish config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git -C local/pages-publish checkout -B gh-pages
           git -C local/pages-publish add .
-          git -C local/pages-publish commit -m "Deploy ultra-scale playbook"
+          git -C local/pages-publish commit -m "Deploy megatron explorer" || exit 0
+          git -C local/pages-publish remote remove origin 2>/dev/null || true
           git -C local/pages-publish remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git -C local/pages-publish push --force origin gh-pages
+          git -C local/pages-publish push origin gh-pages
