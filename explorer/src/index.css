@@ -556,3 +556,21 @@ body {
   font-size: 12px;
   white-space: pre;
 }
+
+.rank-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+  gap: 6px;
+}
+
+.rank-cell {
+  min-height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #f3f4f6;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  display: grid;
+  place-items: center;
+}
