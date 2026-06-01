@@ -57,7 +57,7 @@ jobs:
           VITE_REPO_HOME: https://github.com/phi9t/megatronlm
           VITE_SOURCE_REF: ${{ github.sha }}
         run: |
-          npm ci
+          npm install
           ./scripts/workflow.sh gen-data
           npm run build
 
