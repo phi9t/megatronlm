@@ -45,6 +45,14 @@ get-started/quickstart
 ```{toctree}
 :maxdepth: 2
 :hidden:
+:caption: Tutorials
+
+tutorials/foundations/index
+```
+
+```{toctree}
+:maxdepth: 2
+:hidden:
 :caption: Basic Usage
 
 user-guide/data-preparation

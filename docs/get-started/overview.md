@@ -86,3 +86,11 @@ After training or modifying a Megatron model, you can convert it again for deplo
 
 **Compatible with:** [Hugging Face Accelerate](https://github.com/huggingface/accelerate), [Colossal-AI](https://github.com/hpcaitech/ColossalAI), and [DeepSpeed](https://github.com/microsoft/DeepSpeed)
 
+## Learn the foundations interactively
+
+New to the Core vs Training split, process groups, layer specs, or the mini
+training loop? Work through the hands-on path:
+
+- [Foundations Lab](../tutorials/foundations/index.md) — checkpoints, labs, and production map
+
+

@@ -65,6 +65,7 @@ python tools/preprocess_data.py \
 
 ## Next Steps
 
+- [Foundations Lab](../tutorials/foundations/index.md) — interactive path for stack mental model, parallel state, configs/specs, and mini loop
 - Explore [Parallelism Strategies](../user-guide/parallelism-guide.md) to scale your training
 - Learn about [Data Preparation](../user-guide/data-preparation.md) best practices
 - Explore [Advanced Features](../user-guide/features/index.md) for FP8 training, context parallelism, and more
