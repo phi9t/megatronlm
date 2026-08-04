@@ -36,6 +36,19 @@ workspace.
 
 - After editing imports in any Python files, always run `uv run isort` on those files to fix import order before committing.
 
+### Clean Worktree and Agent Lineage
+
+- Keep the primary checkout **clean**. Commit **small and often** after each
+  logical unit; do not park large intentional WIP on shared `main`.
+- Prefer a **git worktree** for feature work and non-trivial bug fixes, under
+  ignored `.worktrees/` (see personal skill `agent-worktrees`).
+- Branch names: `agent/<agent-id>/<yyyyMMdd>-<short-slug>`. Commit bodies must
+  include lineage trailers (`Agent:`, `Worktree:`, preferably `Branch:`) so
+  `git log` / `git reflog` can identify which agent performed the work.
+- Clean-tree checkpoint commits are expected for intentional code changes;
+  still do not push, force-push, amend published history, or skip hooks unless
+  the user explicitly asks.
+
 ### Runtime Artifacts
 
 - Never use `/tmp` for repo workflows, tests, launchers, caches, or generated artifacts.

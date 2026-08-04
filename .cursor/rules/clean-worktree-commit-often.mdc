@@ -1,0 +1,68 @@
+---
+description: Keep the primary git worktree clean; commit small and often; isolate feature/bug work in agent-lineaged git worktrees.
+alwaysApply: true
+---
+
+# Clean Worktree, Small Commits, Agent Lineage
+
+## Why this exists
+
+A dirty primary checkout mixes unrelated edits, blocks other agents, and hides blame.
+Feature and bugfix streams belong in isolated git worktrees. Checkpoint commits
+are how we keep those streams inspectable via `git log` and `git reflog`.
+
+## Hard expectations
+
+1. **Primary checkout stays clean.** After each logical unit of work—and before
+   ending a turn where you intentionally changed tracked files—stage and commit.
+   Prefer many small commits over one large dump.
+2. **Never leave intentional WIP uncommitted** on the shared/main worktree when
+   you could finish a coherent commit. Scrap experiments and generator trash
+   go under ignored paths (`local/`, `.worktrees/`), not as lingering dirty
+   tracked state.
+3. **Feature work and non-trivial bug fixes use a git worktree** (see skill
+   `agent-worktrees`). Do not pile long-lived work onto `main` in the primary
+   tree if a worktree is available.
+4. **Name branches and write commit messages for lineage.** Branch names and
+   commit bodies must identify which agent/session did the work so history and
+   reflog are auditable without chat logs.
+
+## Commit cadence
+
+- One concern per commit (single package of “why”).
+- Commit after: a green intermediate step, a finished helper, a conflict
+  resolution boundary, or “safe to leave and resume.”
+- Avoid mega-commits that mix refactor + feature + formatting + docs.
+
+## Lineage (minimum)
+
+Branch (preferred):
+
+```text
+agent/<agent-id>/<yyyyMMdd>-<short-slug>
+```
+
+Examples: `agent/cursor-composer/20260804-clean-worktree-rule`,
+`agent/codex/20260804-fix-grad-reduce`.
+
+Every commit body ends with trailers (fill what you know):
+
+```text
+Agent: <product>/<model-or-role>
+Session: <short session or conversation id if available>
+Worktree: <repo-relative path, e.g. .worktrees/agent-.../slug>
+```
+
+Do not invent secrets or personal data. Prefer stable short ids over full URLs.
+
+## When a user rule says “only commit if asked”
+
+For this repository, **clean worktree policy wins for intentional code changes**:
+commit when a logical unit is done. Still never push, force-push, amend shared
+history, or skip hooks unless the user explicitly asks. Never commit secrets.
+
+## Workflow pointer
+
+For create/list/finish worktree commands, branch templates, and finish/prune
+checklist, read and follow the `agent-worktrees` skill before starting
+feature or bugfix implementation.
