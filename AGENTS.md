@@ -38,3 +38,12 @@ skill keyword — infer it from the artifact you read.
   Document and encode paths as repo-relative paths, container-internal mount paths, or values
   supplied by the user/configuration. Do not call `os.path.abspath()` or `Path.resolve()` to
   bake host-specific paths into generated commands, docs, configs, or committed code.
+
+<!-- ultron-agentic-workflow:start -->
+## Agentic engineering workflow
+
+**Mandatory:** Read and follow `CONSTITUTION.md` before acting. Before planning,
+building, fixing, or changing code, read and follow
+`docs/agents/agentic-engineering.md`. Direct user instructions and more specific
+repository guidance take precedence.
+<!-- ultron-agentic-workflow:end -->
